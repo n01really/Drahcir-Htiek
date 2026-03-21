@@ -1,0 +1,35 @@
+
+#----------------------------- Global Properties ----------------------------#
+
+/outputDir:bin/$(Platform)
+/intermediateDir:obj/$(Platform)
+/platform:DesktopGL
+/config:
+/profile:Reach
+/compress:False
+
+#-------------------------------- References --------------------------------#
+
+
+#---------------------------------- Content ---------------------------------#
+
+#begin Hori_Wall.aseprite
+/importer:
+/processor:
+/build:Hori_Wall.aseprite
+
+#begin Vert_Wall.aseprite
+/importer:
+/processor:
+/build:Vert_Wall.aseprite
+
+#begin Vert_Wall.aseprite
+/importer:
+/processor:
+/build:Vert_Wall.aseprite
+
+#begin Wall_Corner.aseprite
+/importer:
+/processor:
+/build:Wall_Corner.aseprite
+
