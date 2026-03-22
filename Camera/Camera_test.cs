@@ -17,7 +17,7 @@ namespace Drahcir_Htiek.Camera
         public Camera_test()
         {
             Position = Vector2.Zero;
-            Zoom = 4.0f;
+            Zoom = 15.0f;
         }
 
         public void Follwo(Rectangle target, Viewport viewport)

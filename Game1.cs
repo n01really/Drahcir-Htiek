@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Drahcir_Htiek.Test_map;
 using Drahcir_Htiek.Camera;
+using Drahcir_Htiek.Logic;
 
 namespace Drahcir_Htiek
 {
@@ -56,19 +57,39 @@ namespace Drahcir_Htiek
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            // TODO: Add your update logic here
             var kstate = Keyboard.GetState();
-            int speed = 2;
+            int speed = 1; // Ökade hastigheten lite så du slipper snigla dig fram
 
-            if (kstate.IsKeyDown(Keys.W))
-                _player.Bounds.Y -= speed;
-            if (kstate.IsKeyDown(Keys.S))
-                _player.Bounds.Y += speed;
-            if (kstate.IsKeyDown(Keys.A))
-                _player.Bounds.X -= speed;
-            if (kstate.IsKeyDown(Keys.D))
-                _player.Bounds.X += speed;
+            // 1. SKAPA test-rektangeln (en kopia av spelarens nuvarande plats)
+            Rectangle NextBounds = _player.Bounds;
 
+            // --- 2. X-AXELN (Vänster och Höger) ---
+            // Ändra på test-rektangeln (NextBounds), INTE på spelaren (_player.Bounds)
+            if (kstate.IsKeyDown(Keys.A)) NextBounds.X -= speed;
+            if (kstate.IsKeyDown(Keys.D)) NextBounds.X += speed;
+
+            // Kolla om test-rektangeln krockar med någon vägg eller kista
+            if (CollisionHandler.IsColliding(NextBounds, _Map) || CollisionHandler.IsColliding(NextBounds, _chest))
+            {
+                NextBounds.X = _player.Bounds.X; // Krock! Vi återställer X-positionen.
+            }
+
+            // --- 3. Y-AXELN (Upp och Ner) ---
+            // Ändra på test-rektangeln (NextBounds)
+            if (kstate.IsKeyDown(Keys.W)) NextBounds.Y -= speed;
+            if (kstate.IsKeyDown(Keys.S)) NextBounds.Y += speed;
+
+            // Kolla om test-rektangeln krockar med någon vägg eller kista
+            if (CollisionHandler.IsColliding(NextBounds, _Map) || CollisionHandler.IsColliding(NextBounds, _chest))
+            {
+                NextBounds.Y = _player.Bounds.Y; // Krock! Vi återställer Y-positionen.
+            }
+
+            // 4. UPPDATERA SPELAREN
+            // Nu vet vi att NextBounds är "säker", så vi ger den positionen till spelaren
+            _player.Bounds = NextBounds;
+
+            // 5. Uppdatera kameran
             _camera.Follwo(_player.Bounds, GraphicsDevice.Viewport);
 
             base.Update(gameTime);
