@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Drahcir_Htiek.Test_map;
 
 namespace Drahcir_Htiek
 {
@@ -8,6 +9,11 @@ namespace Drahcir_Htiek
     {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
+
+        private Texture2D _pixel;
+        private Player _player;
+        private Test_Map _Map;
+        private Test_Chest _chest;
 
         public Game1()
         {
@@ -19,6 +25,11 @@ namespace Drahcir_Htiek
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
+            _Map = new Test_Map();
+
+            _player = new Player(100, 100);
+
+            _chest = new Test_Chest(260, 180);
 
             base.Initialize();
         }
@@ -28,6 +39,8 @@ namespace Drahcir_Htiek
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // TODO: use this.Content to load your game content here
+            _pixel = new Texture2D(GraphicsDevice, 1, 1);
+            _pixel.SetData(new[] { Color.White });
         }
 
         protected override void Update(GameTime gameTime)
@@ -36,6 +49,17 @@ namespace Drahcir_Htiek
                 Exit();
 
             // TODO: Add your update logic here
+            var kstate = Keyboard.GetState();
+            int speed = 3;
+
+            if (kstate.IsKeyDown(Keys.W))
+                _player.Bounds.Y -= speed;
+            if (kstate.IsKeyDown(Keys.S))
+                _player.Bounds.Y += speed;
+            if (kstate.IsKeyDown(Keys.A))
+                _player.Bounds.X -= speed;
+            if (kstate.IsKeyDown(Keys.D))
+                _player.Bounds.X += speed;
 
             base.Update(gameTime);
         }
@@ -44,7 +68,13 @@ namespace Drahcir_Htiek
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            // TODO: Add your drawing code here
+            _spriteBatch.Begin();
+
+            _Map.Draw(_spriteBatch, _pixel);
+            _chest.Draw(_spriteBatch, _pixel);
+            _player.Draw(_spriteBatch, _pixel);
+
+            _spriteBatch.End();
 
             base.Draw(gameTime);
         }
