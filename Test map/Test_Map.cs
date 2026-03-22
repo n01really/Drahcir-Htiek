@@ -48,8 +48,8 @@ namespace Drahcir_Htiek.Test_map
 
             // --- RUM 1 (Startrummet uppe till vänster) ---
             HorWalls.Add(new Hor_Wall(50, 50, 100)); // Toppvägg
-            VertWalls.Add(new Vert_Wall(50, 50, 100)); // Vänstervägg
-            VertWalls.Add(new Vert_Wall(150, 50, 100)); // Högervägg
+            VertWalls.Add(new Vert_Wall(50, 50, 1000)); // Vänstervägg
+            VertWalls.Add(new Vert_Wall(150, 50, 105)); // Högervägg
 
             // Bottenväggen i rum 1 delas i två för att skapa en dörröppning till korridoren
             HorWalls.Add(new Hor_Wall(50, 150, 30)); // Botten (vänster om dörr)
@@ -59,7 +59,7 @@ namespace Drahcir_Htiek.Test_map
             VertWalls.Add(new Vert_Wall(120, 150, 60)); // Höger korridorvägg (kortare för svängen)
 
             // --- KORRIDOR (Svänger höger) ---
-            HorWalls.Add(new Hor_Wall(80, 250, 150)); // Undre väggen i korridoren
+            HorWalls.Add(new Hor_Wall(50, 250, 1500)); // Undre väggen i korridoren
             HorWalls.Add(new Hor_Wall(120, 210, 110)); // Övre väggen (efter svängen)
 
             // --- RUM 2 (Fyrkantigt rum i slutet av korridoren) ---
@@ -68,7 +68,7 @@ namespace Drahcir_Htiek.Test_map
             HorWalls.Add(new Hor_Wall(230, 250, 100)); // Bottenvägg
 
             // Vänsterväggen har en öppning för korridoren
-            VertWalls.Add(new Vert_Wall(230, 150, 60)); // Övre delen av vänsterväggen
+            VertWalls.Add(new Vert_Wall(230, 155, 60)); // Övre delen av vänsterväggen
         }
 
         public void Draw(SpriteBatch spriteBatch, Texture2D pixel)

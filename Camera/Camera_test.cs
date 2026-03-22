@@ -20,7 +20,7 @@ namespace Drahcir_Htiek.Camera
             Zoom = 15.0f;
         }
 
-        public void Follwo(Rectangle target, Viewport viewport)
+        public void Follow(Rectangle target, Viewport viewport)
         {
             var centering = new Vector2(viewport.Width / 2f, viewport.Height / 2f);
             Position = new Vector2(target.X + target.Width / 2f, target.Y + target.Height / 2f);

@@ -11,7 +11,8 @@ namespace Drahcir_Htiek.Test_map
     public class Test_Chest
     {
         public Rectangle Bounds;
-        public Color Color = Color.Green;
+        //public Color Color = Color.Green;
+        public Texture2D Texture;
 
 
         public Test_Chest(int x, int y)
@@ -19,9 +20,9 @@ namespace Drahcir_Htiek.Test_map
             Bounds = new Rectangle(x, y, 16, 16);
         }
 
-        public void Draw(SpriteBatch spriteBatch, Texture2D pixel)
+        public void Draw(SpriteBatch spriteBatch /*Texture2D pixel*/)
         {
-            spriteBatch.Draw(pixel, Bounds, Color);
+            spriteBatch.Draw(Texture, Bounds, Color.White);
         }
     }
 }

@@ -50,6 +50,8 @@ namespace Drahcir_Htiek
             // TODO: use this.Content to load your game content here
             _pixel = new Texture2D(GraphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
+
+            _chest.Texture = Content.Load<Texture2D>("Chest");
         }
 
         protected override void Update(GameTime gameTime)
@@ -58,39 +60,36 @@ namespace Drahcir_Htiek
                 Exit();
 
             var kstate = Keyboard.GetState();
-            int speed = 1; // Ökade hastigheten lite så du slipper snigla dig fram
+            int speed = 1; 
 
-            // 1. SKAPA test-rektangeln (en kopia av spelarens nuvarande plats)
+            
             Rectangle NextBounds = _player.Bounds;
 
-            // --- 2. X-AXELN (Vänster och Höger) ---
-            // Ändra på test-rektangeln (NextBounds), INTE på spelaren (_player.Bounds)
+           
             if (kstate.IsKeyDown(Keys.A)) NextBounds.X -= speed;
             if (kstate.IsKeyDown(Keys.D)) NextBounds.X += speed;
 
-            // Kolla om test-rektangeln krockar med någon vägg eller kista
+           
             if (CollisionHandler.IsColliding(NextBounds, _Map) || CollisionHandler.IsColliding(NextBounds, _chest))
             {
                 NextBounds.X = _player.Bounds.X; // Krock! Vi återställer X-positionen.
             }
 
-            // --- 3. Y-AXELN (Upp och Ner) ---
-            // Ändra på test-rektangeln (NextBounds)
+            
             if (kstate.IsKeyDown(Keys.W)) NextBounds.Y -= speed;
             if (kstate.IsKeyDown(Keys.S)) NextBounds.Y += speed;
 
-            // Kolla om test-rektangeln krockar med någon vägg eller kista
+            
             if (CollisionHandler.IsColliding(NextBounds, _Map) || CollisionHandler.IsColliding(NextBounds, _chest))
             {
-                NextBounds.Y = _player.Bounds.Y; // Krock! Vi återställer Y-positionen.
+                NextBounds.Y = _player.Bounds.Y; 
             }
 
-            // 4. UPPDATERA SPELAREN
-            // Nu vet vi att NextBounds är "säker", så vi ger den positionen till spelaren
+            
             _player.Bounds = NextBounds;
 
-            // 5. Uppdatera kameran
-            _camera.Follwo(_player.Bounds, GraphicsDevice.Viewport);
+            
+            _camera.Follow(_player.Bounds, GraphicsDevice.Viewport);
 
             base.Update(gameTime);
         }
@@ -99,10 +98,12 @@ namespace Drahcir_Htiek
         {
             GraphicsDevice.Clear(Color.Black);
 
-            _spriteBatch.Begin(transformMatrix: _camera.Transform);
+            _spriteBatch.Begin(
+                transformMatrix: _camera.Transform,
+                samplerState: SamplerState.PointClamp);
 
             _Map.Draw(_spriteBatch, _pixel);
-            _chest.Draw(_spriteBatch, _pixel);
+            _chest.Draw(_spriteBatch);
             _player.Draw(_spriteBatch, _pixel);
 
             _spriteBatch.End();
