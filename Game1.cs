@@ -53,7 +53,9 @@ namespace Drahcir_Htiek
 
             _chest.Texture = Content.Load<Texture2D>("Chest");
             _Map.HorWallTexture = Content.Load<Texture2D>("Hori_Wall");
+            _Map.CornerWallTexture = Content.Load<Texture2D>("Wall_Corner");
             _Map.VertWallTexture = Content.Load<Texture2D>("Vert_Wall");
+            
         }
 
         protected override void Update(GameTime gameTime)
