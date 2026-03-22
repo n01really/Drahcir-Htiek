@@ -11,28 +11,31 @@ namespace Drahcir_Htiek.Test_map
     public class Hor_Wall
     {
         public Rectangle Bounds;
-        public Color Color = Color.Red;
-        public Hor_Wall(int x, int y, int width, int thickness = 5)
+        public Texture2D Texture;
+        
+        public Hor_Wall(int x, double y, int width, int thickness = 48)
         {
-            Bounds = new Rectangle(x, y, width, thickness);
+            Bounds = new Rectangle(x, (int)y, width, thickness);
         }
-        public void Draw(SpriteBatch spriteBatch, Texture2D pixel)
+        
+        public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(pixel, Bounds, Color);
+            spriteBatch.Draw(Texture, Bounds, Color.White);
         }
     }
 
     public class Vert_Wall
     {
         public Rectangle Bounds;
-        public Color Color = Color.Red;
-        public Vert_Wall(int x, int y, int height, int thickness = 5)
+        //public Color Color = Color.Red;
+        public Texture2D Texture;
+        public Vert_Wall(int x, int y, int height, int thickness = 16)
         {
             Bounds = new Rectangle(x, y, thickness, height);
         }
-        public void Draw(SpriteBatch spriteBatch, Texture2D pixel)
+        public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(pixel, Bounds, Color);
+            spriteBatch.Draw(Texture, Bounds, Color.White);
         }
     }
 
@@ -40,6 +43,8 @@ namespace Drahcir_Htiek.Test_map
     {
         public List<Hor_Wall> HorWalls;
         public List<Vert_Wall> VertWalls;
+        public Texture2D HorWallTexture;
+        public Texture2D VertWallTexture;
 
         public Test_Map()
         {
@@ -60,7 +65,7 @@ namespace Drahcir_Htiek.Test_map
 
             // --- KORRIDOR (Svänger höger) ---
             HorWalls.Add(new Hor_Wall(50, 250, 1500)); // Undre väggen i korridoren
-            HorWalls.Add(new Hor_Wall(120, 210, 110)); // Övre väggen (efter svängen)
+            HorWalls.Add(new Hor_Wall(120, 163, 110)); // Övre väggen (efter svängen)
 
             // --- RUM 2 (Fyrkantigt rum i slutet av korridoren) ---
             HorWalls.Add(new Hor_Wall(230, 150, 100)); // Toppvägg
@@ -68,18 +73,24 @@ namespace Drahcir_Htiek.Test_map
             HorWalls.Add(new Hor_Wall(230, 250, 100)); // Bottenvägg
 
             // Vänsterväggen har en öppning för korridoren
-            VertWalls.Add(new Vert_Wall(230, 155, 60)); // Övre delen av vänsterväggen
+            VertWalls.Add(new Vert_Wall(230, 55, 60)); // Övre delen av vänsterväggen
         }
 
-        public void Draw(SpriteBatch spriteBatch, Texture2D pixel)
+        public void Draw(SpriteBatch spriteBatch)
         {
             // Rita alla horisontella väggar
             foreach (var hw in HorWalls)
-                hw.Draw(spriteBatch, pixel);
+            {
+                hw.Texture = HorWallTexture;
+                hw.Draw(spriteBatch);
+            }
 
-            // Rita alla vertikala väggar
+                // Rita alla vertikala väggar
             foreach (var vw in VertWalls)
-                vw.Draw(spriteBatch, pixel);
+            {
+               vw.Texture = VertWallTexture;
+               vw.Draw(spriteBatch);
+            }
         }
     }
 }

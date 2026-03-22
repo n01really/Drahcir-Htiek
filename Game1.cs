@@ -52,6 +52,8 @@ namespace Drahcir_Htiek
             _pixel.SetData(new[] { Color.White });
 
             _chest.Texture = Content.Load<Texture2D>("Chest");
+            _Map.HorWallTexture = Content.Load<Texture2D>("Hori_Wall");
+            _Map.VertWallTexture = Content.Load<Texture2D>("Vert_Wall");
         }
 
         protected override void Update(GameTime gameTime)
@@ -102,7 +104,7 @@ namespace Drahcir_Htiek
                 transformMatrix: _camera.Transform,
                 samplerState: SamplerState.PointClamp);
 
-            _Map.Draw(_spriteBatch, _pixel);
+            _Map.Draw(_spriteBatch);
             _chest.Draw(_spriteBatch);
             _player.Draw(_spriteBatch, _pixel);
 
