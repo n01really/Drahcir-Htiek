@@ -12,7 +12,7 @@ namespace Drahcir_Htiek.Test_map
     {
         public Rectangle Bounds;
         public Color Color = Color.Red;
-        public Hor_Wall(int x, int y, int width, int thickness = 16)
+        public Hor_Wall(int x, int y, int width, int thickness = 5)
         {
             Bounds = new Rectangle(x, y, width, thickness);
         }
@@ -26,7 +26,7 @@ namespace Drahcir_Htiek.Test_map
     {
         public Rectangle Bounds;
         public Color Color = Color.Red;
-        public Vert_Wall(int x, int y, int height, int thickness = 16)
+        public Vert_Wall(int x, int y, int height, int thickness = 5)
         {
             Bounds = new Rectangle(x, y, thickness, height);
         }

@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Drahcir_Htiek.Test_map;
+using Drahcir_Htiek.Camera;
 
 namespace Drahcir_Htiek
 {
@@ -14,12 +15,17 @@ namespace Drahcir_Htiek
         private Player _player;
         private Test_Map _Map;
         private Test_Chest _chest;
+        private Camera_test _camera;
 
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+
+            _graphics.PreferredBackBufferWidth = 1920;
+            _graphics.PreferredBackBufferHeight = 1080;
+            _graphics.ApplyChanges();
         }
 
         protected override void Initialize()
@@ -30,6 +36,8 @@ namespace Drahcir_Htiek
             _player = new Player(100, 100);
 
             _chest = new Test_Chest(260, 180);
+
+            _camera = new Camera_test();
 
             base.Initialize();
         }
@@ -50,7 +58,7 @@ namespace Drahcir_Htiek
 
             // TODO: Add your update logic here
             var kstate = Keyboard.GetState();
-            int speed = 3;
+            int speed = 2;
 
             if (kstate.IsKeyDown(Keys.W))
                 _player.Bounds.Y -= speed;
@@ -61,14 +69,16 @@ namespace Drahcir_Htiek
             if (kstate.IsKeyDown(Keys.D))
                 _player.Bounds.X += speed;
 
+            _camera.Follwo(_player.Bounds, GraphicsDevice.Viewport);
+
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.Black);
 
-            _spriteBatch.Begin();
+            _spriteBatch.Begin(transformMatrix: _camera.Transform);
 
             _Map.Draw(_spriteBatch, _pixel);
             _chest.Draw(_spriteBatch, _pixel);
