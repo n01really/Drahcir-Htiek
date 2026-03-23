@@ -10,13 +10,16 @@ namespace Drahcir_Htiek.Test_map
 {
     public class Hor_Wall
     {
+        public static int DefaultWidth = 48;
+        public static int DefaultThickness = 48;
+        
         public Rectangle Bounds;
         public Texture2D Texture;
         public int Layer;
 
-        public Hor_Wall(int x, double y, int width, int thickness = 48, int layer = 0)
+        public Hor_Wall(int x, double y, int layer = 0)
         {
-            Bounds = new Rectangle(x, (int)y, width, thickness);
+            Bounds = new Rectangle(x, (int)y, DefaultWidth, DefaultThickness);
             Layer = layer;
         }
         
@@ -49,14 +52,17 @@ namespace Drahcir_Htiek.Test_map
 
     public class Vert_Wall
     {
+        public static int DefaultHeight = 48;
+        public static int DefaultThickness = 16;
+        
         public Rectangle Bounds;
         //public Color Color = Color.Red;
         public Texture2D Texture;
         public int Layer;
 
-        public Vert_Wall(int x, int y, int height, int thickness = 16, int layer = 0)
+        public Vert_Wall(int x, int y, int layer = 0)
         {
-            Bounds = new Rectangle(x, y, thickness, height);
+            Bounds = new Rectangle(x, y, DefaultThickness, DefaultHeight);
             Layer = layer;
         }
         public void Draw(SpriteBatch spriteBatch)
@@ -67,13 +73,16 @@ namespace Drahcir_Htiek.Test_map
     
     public class Corner_Wall
     {
+        public static int DefaultHeight = 48;
+        public static int DefaultThickness = 16;
+        
         public Rectangle Bounds;
         public Texture2D Texture;
         public int Layer;
         
-        public Corner_Wall(int x, int y, int height, int thickness = 16, int layer = 0)
+        public Corner_Wall(int x, int y, int layer = 0)
         {
-            Bounds = new Rectangle(x, y, thickness, height);
+            Bounds = new Rectangle(x, y, DefaultThickness, DefaultHeight);
             Layer = layer;
         }
         
@@ -99,17 +108,23 @@ namespace Drahcir_Htiek.Test_map
             CornerWalls = new List<Corner_Wall>();
 
             // --- RUM 1 (Startrummet uppe till vänster) ---
-            HorWalls.Add(new Hor_Wall(15, 0, 48, 48, 1)); // Toppvägg
-            HorWalls.Add(new Hor_Wall(62, 0, 48, 48, 1)); // Toppvägg
-            CornerWalls.Add(new Corner_Wall(109, 0, 48, 16, 2)); // HögerÖvrehörn
-            VertWalls.Add(new Vert_Wall(109, 11, 48, 16, 3)); // Högervägg
-            VertWalls.Add(new Vert_Wall(109, 48, 48, 16, 3)); // Högervägg
-            CornerWalls.Add(new Corner_Wall(109, 85, 48, 16, 4)); // HögerNedrehörn
-            CornerWalls.Add(new Corner_Wall(0, 0, 48, 16, 2)); // VänsterÖvrehörn
-            VertWalls.Add(new Vert_Wall(0, 11, 48, 16, 3)); // Vänstervägg            
-            VertWalls.Add(new Vert_Wall(0, 48, 48, 16, 3)); // Vänstervägg
-            CornerWalls.Add(new Corner_Wall(0, 85, 48, 16, 4)); // VänsterNedrehörn
-
+            HorWalls.Add(new Hor_Wall(15, 0, 1)); // Toppvägg
+            HorWalls.Add(new Hor_Wall(62, 0, 1)); // Toppvägg
+            HorWalls.Add(new Hor_Wall(109, 0, 1)); // Toppvägg
+            CornerWalls.Add(new Corner_Wall(156, 0, 2)); // HögerÖvrehörn
+            VertWalls.Add(new Vert_Wall(156, 11, 3)); // Högervägg
+            VertWalls.Add(new Vert_Wall(156, 48, 3)); // Högervägg
+            VertWalls.Add(new Vert_Wall(156, 85, 3)); // Högervägg
+            CornerWalls.Add(new Corner_Wall(156, 122, 4)); // HögerNedrehörn
+            CornerWalls.Add(new Corner_Wall(0, 0, 2)); // VänsterÖvrehörn
+            VertWalls.Add(new Vert_Wall(0, 11, 3)); // Vänstervägg            
+            VertWalls.Add(new Vert_Wall(0, 48, 3)); // Vänstervägg
+            VertWalls.Add(new Vert_Wall(0, 85, 3)); // Vänstervägg
+            CornerWalls.Add(new Corner_Wall(0, 122, 4)); // VänsterNedrehörn
+            HorWalls.Add(new Hor_Wall(15, 122, 1)); // Bottenväggvänster
+            HorWalls.Add(new Hor_Wall(109, 122, 1)); // Bottenvägghöger
+            CornerWalls.Add(new Corner_Wall(62, 122, 4)); // Bottenväggmittenvänster
+            CornerWalls.Add(new Corner_Wall(94, 122, 2)); // BottenväggmittenHöger
 
         }
 
