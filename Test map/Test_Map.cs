@@ -220,9 +220,8 @@ namespace Drahcir_Htiek.Test_map
             HorWalls.Add(new Hor_Wall(312, 366, 8));
             HorWalls.Add(new Hor_Wall(359, 366, 8));
 
+            // --- Korridor 2 ---
 
-            // 5 HorWalls för hela bottenVäggen
-            // 4 VertWalls 2 cornerwalls och en dörr för hela vänsterVäggen
 
 
         }
