@@ -12,10 +12,12 @@ namespace Drahcir_Htiek.Test_map
     {
         public Rectangle Bounds;
         public Color Color = Color.Blue;
+        public int Layer;
 
         public Player(int startX, int startY) 
         { 
             Bounds = new Rectangle(startX, startY, 16, 32);
+            Layer = 5; // Standard layer
         }
 
         public void Draw(SpriteBatch spriteBatch, Texture2D pixel)

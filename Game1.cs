@@ -4,6 +4,9 @@ using Microsoft.Xna.Framework.Input;
 using Drahcir_Htiek.Test_map;
 using Drahcir_Htiek.Camera;
 using Drahcir_Htiek.Logic;
+using System.Collections.Generic;
+using System.Linq;
+using System;
 
 namespace Drahcir_Htiek
 {
@@ -92,10 +95,29 @@ namespace Drahcir_Htiek
             
             _player.Bounds = NextBounds;
 
+            // Uppdatera spelarens layer baserat på position
+            UpdatePlayerLayer();
             
             _camera.Follow(_player.Bounds, GraphicsDevice.Viewport);
 
             base.Update(gameTime);
+        }
+
+        private void UpdatePlayerLayer()
+        {
+            // Standard layer för spelaren (högre än de flesta väggar)
+            _player.Layer = 5;
+
+            // Kolla varje horisontell vägg
+            foreach (var wall in _Map.HorWalls)
+            {
+                // Om spelarens centrum är ovanför väggens centrum (spelaren är bakom väggen)
+                if (_player.Bounds.Center.Y < wall.Bounds.Center.Y)
+                {
+                    // Sätt spelarens layer lägre så den ritas bakom väggen
+                    _player.Layer = wall.Layer - 1;
+                }
+            }
         }
 
         protected override void Draw(GameTime gameTime)
@@ -106,9 +128,46 @@ namespace Drahcir_Htiek
                 transformMatrix: _camera.Transform,
                 samplerState: SamplerState.PointClamp);
 
-            _Map.Draw(_spriteBatch);
-            _chest.Draw(_spriteBatch);
-            _player.Draw(_spriteBatch, _pixel);
+            // Skapa en lista med alla objekt och deras layers
+            var drawableObjects = new List<(int layer, Action draw)>();
+
+            // Lägg till alla väggar
+            foreach (var wall in _Map.HorWalls)
+            {
+                var w = wall; // Capture variable
+                drawableObjects.Add((w.Layer, () => {
+                    w.Texture = _Map.HorWallTexture;
+                    w.Draw(_spriteBatch);
+                }));
+            }
+
+            foreach (var wall in _Map.VertWalls)
+            {
+                var w = wall;
+                drawableObjects.Add((w.Layer, () => {
+                    w.Texture = _Map.VertWallTexture;
+                    w.Draw(_spriteBatch);
+                }));
+            }
+
+            foreach (var wall in _Map.CornerWalls)
+            {
+                var w = wall;
+                drawableObjects.Add((w.Layer, () => {
+                    w.Texture = _Map.CornerWallTexture;
+                    w.Draw(_spriteBatch);
+                }));
+            }
+
+            // Lägg till chest och player
+            drawableObjects.Add((3, () => _chest.Draw(_spriteBatch)));
+            drawableObjects.Add((_player.Layer, () => _player.Draw(_spriteBatch, _pixel)));
+
+            // Sortera efter layer och rita i rätt ordning
+            foreach (var obj in drawableObjects.OrderBy(o => o.layer))
+            {
+                obj.draw();
+            }
 
             _spriteBatch.End();
 
