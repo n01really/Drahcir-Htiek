@@ -11,11 +11,12 @@ namespace Drahcir_Htiek.Logic
 {
     public static class CollisionHandler
     {
-        public static bool IsColliding(Rectangle newBounds, Test_Map map)
+        public static bool IsColliding(Rectangle newBounds, Rectangle oldBounds, Test_Map map)
         { 
             foreach (var wall in map.HorWalls)
             {
-                if (newBounds.Intersects(wall.Bounds))
+                // Använd den dynamiska kollisionsrektangeln baserat på spelarens GAMLA position
+                if (newBounds.Intersects(wall.GetCollisionBounds(oldBounds)))
                     return true;
             }
 
@@ -24,6 +25,13 @@ namespace Drahcir_Htiek.Logic
                 if (newBounds.Intersects(wall.Bounds))
                     return true;
             }
+            
+            foreach (var wall in map.CornerWalls)
+            {
+                if (newBounds.Intersects(wall.Bounds))
+                    return true;
+            }
+            
             return false;
         }
 

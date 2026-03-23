@@ -20,6 +20,27 @@ namespace Drahcir_Htiek.Test_map
             Layer = layer;
         }
         
+        // Ny metod för att få kollisionsrektangeln baserat på spelarens position
+        public Rectangle GetCollisionBounds(Rectangle oldPlayerBounds)
+        {
+            // Kolla om spelaren är under eller över väggen
+            int playerCenterY = oldPlayerBounds.Center.Y;
+            int wallCenterY = Bounds.Center.Y;
+            
+            // Om spelaren är under väggen (kommer underifrån)
+            if (playerCenterY > wallCenterY)
+            {
+                // Returnera de översta 16 pixlarna av väggen
+                return new Rectangle(Bounds.X, Bounds.Y, Bounds.Width, 16);
+            }
+            // Om spelaren är över väggen (kommer ovanifrån)
+            else
+            {
+                // Returnera de nedersta 16 pixlarna av väggen
+                return new Rectangle(Bounds.X, Bounds.Bottom - 16, Bounds.Width, 16);
+            }
+        }
+        
         public void Draw(SpriteBatch spriteBatch)
         {
             spriteBatch.Draw(Texture, Bounds, Color.White);
@@ -80,10 +101,14 @@ namespace Drahcir_Htiek.Test_map
             // --- RUM 1 (Startrummet uppe till vänster) ---
             HorWalls.Add(new Hor_Wall(15, 0, 48, 48, 1)); // Toppvägg
             HorWalls.Add(new Hor_Wall(62, 0, 48, 48, 1)); // Toppvägg
-            VertWalls.Add(new Vert_Wall(0, 11, 48, 16, 3)); // Högervägg
-            CornerWalls.Add(new Corner_Wall(0, 0, 48, 16, 2));
-            VertWalls.Add(new Vert_Wall(0, 48, 48, 16, 3));
-            CornerWalls.Add(new Corner_Wall(0, 85, 48, 16, 4));
+            CornerWalls.Add(new Corner_Wall(109, 0, 48, 16, 2)); // HögerÖvrehörn
+            VertWalls.Add(new Vert_Wall(109, 11, 48, 16, 3)); // Högervägg
+            VertWalls.Add(new Vert_Wall(109, 48, 48, 16, 3)); // Högervägg
+            CornerWalls.Add(new Corner_Wall(109, 85, 48, 16, 4)); // HögerNedrehörn
+            CornerWalls.Add(new Corner_Wall(0, 0, 48, 16, 2)); // VänsterÖvrehörn
+            VertWalls.Add(new Vert_Wall(0, 11, 48, 16, 3)); // Vänstervägg            
+            VertWalls.Add(new Vert_Wall(0, 48, 48, 16, 3)); // Vänstervägg
+            CornerWalls.Add(new Corner_Wall(0, 85, 48, 16, 4)); // VänsterNedrehörn
 
 
         }
@@ -120,4 +145,3 @@ namespace Drahcir_Htiek.Test_map
         }
     }
 }
-    

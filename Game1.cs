@@ -34,7 +34,7 @@ namespace Drahcir_Htiek
             // TODO: Add your initialization logic here
             _Map = new Test_Map();
 
-            _player = new Player(100, 100);
+            _player = new Player(54, 58);
 
             _chest = new Test_Chest(260, 180);
 
@@ -74,7 +74,7 @@ namespace Drahcir_Htiek
             if (kstate.IsKeyDown(Keys.D)) NextBounds.X += speed;
 
            
-            if (CollisionHandler.IsColliding(NextBounds, _Map) || CollisionHandler.IsColliding(NextBounds, _chest))
+            if (CollisionHandler.IsColliding(NextBounds, _player.Bounds, _Map) || CollisionHandler.IsColliding(NextBounds, _chest))
             {
                 NextBounds.X = _player.Bounds.X; // Krock! Vi återställer X-positionen.
             }
@@ -84,7 +84,7 @@ namespace Drahcir_Htiek
             if (kstate.IsKeyDown(Keys.S)) NextBounds.Y += speed;
 
             
-            if (CollisionHandler.IsColliding(NextBounds, _Map) || CollisionHandler.IsColliding(NextBounds, _chest))
+            if (CollisionHandler.IsColliding(NextBounds, _player.Bounds, _Map) || CollisionHandler.IsColliding(NextBounds, _chest))
             {
                 NextBounds.Y = _player.Bounds.Y; 
             }
