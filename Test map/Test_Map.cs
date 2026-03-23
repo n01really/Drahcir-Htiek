@@ -198,6 +198,7 @@ namespace Drahcir_Htiek.Test_map
             CornerWalls.Add(new Corner_Wall(156, 207, 5));
             CornerWalls.Add(new Corner_Wall(155, 366, 6));
             HorWalls.Add(new Hor_Wall(171, 122, 6));
+            HorWalls.Add(new Hor_Wall(218, 122, 6));
 
         }
 
