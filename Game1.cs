@@ -142,6 +142,30 @@ namespace Drahcir_Htiek
                     break; // En vägg är tillräcklig för att bestämma layer
                 }
             }
+
+            // Kolla även corner walls (exakt samma logik)
+            foreach (var wall in _Map.CornerWalls)
+            {
+                // Kontrollera om spelaren är nära väggen horisontellt (X-axeln)
+                bool isNearWallHorizontally = _player.Bounds.Right > wall.Bounds.Left && 
+                                              _player.Bounds.Left < wall.Bounds.Right;
+                
+                // Kontrollera om spelaren är nära väggen vertikalt (Y-axeln)
+                int distanceToWall = System.Math.Abs(_player.Bounds.Center.Y - wall.Bounds.Center.Y);
+                bool isNearWallVertically = distanceToWall < 60;
+                
+                _debugText += $"CornerWall Y: {wall.Bounds.Y}, Bottom: {wall.Bounds.Bottom}, HorNear: {isNearWallHorizontally}, VertDist: {distanceToWall}, VertNear: {isNearWallVertically}\n";
+                
+                if (!isNearWallHorizontally || !isNearWallVertically)
+                    continue;
+
+                if (_player.Bounds.Bottom < (wall.Bounds.Bottom - 16))
+                {
+                    _debugText += $"BEHIND CornerWall! Setting layer to {wall.Layer - 1}\n";
+                    _player.Layer = wall.Layer - 1;
+                    break;
+                }
+            }
             
             _debugText += $"Final Layer: {_player.Layer}\n";
         }

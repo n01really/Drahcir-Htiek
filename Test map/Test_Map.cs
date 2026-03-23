@@ -88,6 +88,29 @@ namespace Drahcir_Htiek.Test_map
             Layer = layer;
         }
         
+        // Kollision baserad på HÖJD, inte bredd
+        public Rectangle GetCollisionBounds(Rectangle oldPlayerBounds)
+        {
+            // Kolla om spelaren är under eller över väggen
+            int playerBottomY = oldPlayerBounds.Bottom;
+            int wallCenterY = Bounds.Center.Y;
+            
+            // Om spelaren är under väggen (kommer underifrån)
+            if (playerBottomY > wallCenterY)
+            {
+                // Returnera de översta 24 pixlarna av väggen
+                // Använd Bounds.Width så att varje vägg behåller sin egen bredd
+                return new Rectangle(Bounds.X, Bounds.Y, Bounds.Width, 24);
+            }
+            // Om spelaren är över väggen (kommer ovanifrån)
+            else
+            {
+                // Returnera de nedersta 24 pixlarna av väggen
+                // Höjden (24 pixlar) är det som styr kollisionen, inte bredden
+                return new Rectangle(Bounds.X, Bounds.Bottom - 24, Bounds.Width, 24);
+            }
+        }
+        
         public void Draw(SpriteBatch spriteBatch)
         {
             spriteBatch.Draw(Texture, Bounds, Color.White);
@@ -123,10 +146,10 @@ namespace Drahcir_Htiek.Test_map
             VertWalls.Add(new Vert_Wall(0, 48, 3)); // Vänstervägg
             VertWalls.Add(new Vert_Wall(0, 85, 3)); // Vänstervägg
             CornerWalls.Add(new Corner_Wall(0, 122, 4)); // VänsterNedrehörn
-            HorWalls.Add(new Hor_Wall(15, 122, 1)); // Bottenväggvänster
-            HorWalls.Add(new Hor_Wall(109, 122, 1)); // Bottenvägghöger
+            HorWalls.Add(new Hor_Wall(15, 122, 4)); // Bottenväggvänster
+            HorWalls.Add(new Hor_Wall(109, 122, 4)); // Bottenvägghöger
             CornerWalls.Add(new Corner_Wall(62, 122, 4)); // Bottenväggmittenvänster
-            CornerWalls.Add(new Corner_Wall(94, 122, 2)); // BottenväggmittenHöger
+            CornerWalls.Add(new Corner_Wall(94, 122, 4)); // BottenväggmittenHöger
 
         }
 

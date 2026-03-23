@@ -28,7 +28,8 @@ namespace Drahcir_Htiek.Logic
             
             foreach (var wall in map.CornerWalls)
             {
-                if (newBounds.Intersects(wall.Bounds))
+                // Ändra från wall.Bounds till wall.GetCollisionBounds(oldBounds)
+                if (newBounds.Intersects(wall.GetCollisionBounds(oldBounds)))
                     return true;
             }
             
