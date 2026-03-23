@@ -21,7 +21,7 @@ namespace Drahcir_Htiek
         private Test_Chest _chest;
         private Camera_test _camera;
         private SpriteFont _debugFont;
-        private string _debugText = "";
+        private Debug_Mode _debugMode;
 
         public Game1()
         {
@@ -45,6 +45,8 @@ namespace Drahcir_Htiek
 
             _camera = new Camera_test();
 
+            _debugMode = new Debug_Mode();
+
             base.Initialize();
         }
 
@@ -56,20 +58,24 @@ namespace Drahcir_Htiek
             _pixel = new Texture2D(GraphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
 
+            _debugMode.SetPixelTexture(_pixel);
+
             _chest.Texture = Content.Load<Texture2D>("Chest");
             _Map.HorWallTexture = Content.Load<Texture2D>("Hori_Wall");
             _Map.CornerWallTexture = Content.Load<Texture2D>("Wall_Corner");
             _Map.VertWallTexture = Content.Load<Texture2D>("Vert_Wall");
             
-            // Skapa en enkel debug-font om du inte har en
-            // Kommentera ut denna rad om du inte har en font
-            // _debugFont = Content.Load<SpriteFont>("DebugFont");
+            _debugFont = Content.Load<SpriteFont>("DebugFont");
+            _debugMode.SetFont(_debugFont);
         }
 
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
+
+            // Uppdatera debug mode (lyssna efter §-tangenten)
+            _debugMode.Update();
 
             var kstate = Keyboard.GetState();
             int speed = 1; 
@@ -112,7 +118,6 @@ namespace Drahcir_Htiek
         {
             // Standard layer för spelaren (högre än de flesta väggar)
             _player.Layer = 5;
-            _debugText = $"Player Y: {_player.Bounds.Y}, Bottom: {_player.Bounds.Bottom}, Layer: {_player.Layer}\n";
 
             // Kolla varje horisontell vägg
             foreach (var wall in _Map.HorWalls)
@@ -126,8 +131,6 @@ namespace Drahcir_Htiek
                 int distanceToWall = System.Math.Abs(_player.Bounds.Center.Y - wall.Bounds.Center.Y);
                 bool isNearWallVertically = distanceToWall < 60;
                 
-                _debugText += $"Wall Y: {wall.Bounds.Y}, Bottom: {wall.Bounds.Bottom}, HorNear: {isNearWallHorizontally}, VertDist: {distanceToWall}, VertNear: {isNearWallVertically}\n";
-                
                 if (!isNearWallHorizontally || !isNearWallVertically)
                     continue; // Skippa väggar som spelaren inte är nära
 
@@ -136,7 +139,6 @@ namespace Drahcir_Htiek
                 // för att ritas bakom väggen
                 if (_player.Bounds.Bottom < (wall.Bounds.Bottom - 16))
                 {
-                    _debugText += $"BEHIND WALL! Setting layer to {wall.Layer - 1}\n";
                     // Sätt spelarens layer lägre så den ritas bakom väggen
                     _player.Layer = wall.Layer - 1;
                     break; // En vägg är tillräcklig för att bestämma layer
@@ -154,20 +156,15 @@ namespace Drahcir_Htiek
                 int distanceToWall = System.Math.Abs(_player.Bounds.Center.Y - wall.Bounds.Center.Y);
                 bool isNearWallVertically = distanceToWall < 60;
                 
-                _debugText += $"CornerWall Y: {wall.Bounds.Y}, Bottom: {wall.Bounds.Bottom}, HorNear: {isNearWallHorizontally}, VertDist: {distanceToWall}, VertNear: {isNearWallVertically}\n";
-                
                 if (!isNearWallHorizontally || !isNearWallVertically)
                     continue;
 
                 if (_player.Bounds.Bottom < (wall.Bounds.Bottom - 16))
                 {
-                    _debugText += $"BEHIND CornerWall! Setting layer to {wall.Layer - 1}\n";
                     _player.Layer = wall.Layer - 1;
                     break;
                 }
             }
-            
-            _debugText += $"Final Layer: {_player.Layer}\n";
         }
 
         protected override void Draw(GameTime gameTime)
@@ -221,16 +218,13 @@ namespace Drahcir_Htiek
 
             _spriteBatch.End();
 
-            // Rita debug-text utan transformation
-            if (_debugFont != null)
+            // Rita den nya debug mode positionen (endast när den är aktiverad)
+            if (_debugMode.IsActive)
             {
                 _spriteBatch.Begin();
-                _spriteBatch.DrawString(_debugFont, _debugText, new Vector2(10, 10), Color.Yellow);
+                _debugMode.DrawPlayerPosition(_spriteBatch, _player.Bounds, GraphicsDevice);
                 _spriteBatch.End();
             }
-
-            // Rita debug-text i Console/Output istället
-            System.Diagnostics.Debug.WriteLine(_debugText);
 
             base.Draw(gameTime);
         }
