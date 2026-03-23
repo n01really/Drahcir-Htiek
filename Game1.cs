@@ -20,6 +20,8 @@ namespace Drahcir_Htiek
         private Test_Map _Map;
         private Test_Chest _chest;
         private Camera_test _camera;
+        private SpriteFont _debugFont;
+        private string _debugText = "";
 
         public Game1()
         {
@@ -59,6 +61,9 @@ namespace Drahcir_Htiek
             _Map.CornerWallTexture = Content.Load<Texture2D>("Wall_Corner");
             _Map.VertWallTexture = Content.Load<Texture2D>("Vert_Wall");
             
+            // Skapa en enkel debug-font om du inte har en
+            // Kommentera ut denna rad om du inte har en font
+            // _debugFont = Content.Load<SpriteFont>("DebugFont");
         }
 
         protected override void Update(GameTime gameTime)
@@ -107,17 +112,38 @@ namespace Drahcir_Htiek
         {
             // Standard layer för spelaren (högre än de flesta väggar)
             _player.Layer = 5;
+            _debugText = $"Player Y: {_player.Bounds.Y}, Bottom: {_player.Bounds.Bottom}, Layer: {_player.Layer}\n";
 
             // Kolla varje horisontell vägg
             foreach (var wall in _Map.HorWalls)
             {
-                // Om spelarens centrum är ovanför väggens centrum (spelaren är bakom väggen)
-                if (_player.Bounds.Center.Y < wall.Bounds.Center.Y)
+                // Kontrollera om spelaren är nära väggen horisontellt (X-axeln)
+                bool isNearWallHorizontally = _player.Bounds.Right > wall.Bounds.Left && 
+                                              _player.Bounds.Left < wall.Bounds.Right;
+                
+                // Kontrollera om spelaren är nära väggen vertikalt (Y-axeln)
+                // Spelaren måste vara inom rimligt avstånd från väggen (t.ex. 60 pixlar)
+                int distanceToWall = System.Math.Abs(_player.Bounds.Center.Y - wall.Bounds.Center.Y);
+                bool isNearWallVertically = distanceToWall < 60;
+                
+                _debugText += $"Wall Y: {wall.Bounds.Y}, Bottom: {wall.Bounds.Bottom}, HorNear: {isNearWallHorizontally}, VertDist: {distanceToWall}, VertNear: {isNearWallVertically}\n";
+                
+                if (!isNearWallHorizontally || !isNearWallVertically)
+                    continue; // Skippa väggar som spelaren inte är nära
+
+                // Jämför spelarens fötter (Bottom) med vägggens botten (Bottom)
+                // Lägg till en buffert på 16 pixlar så att spelaren måste vara klart ovanför
+                // för att ritas bakom väggen
+                if (_player.Bounds.Bottom < (wall.Bounds.Bottom - 16))
                 {
+                    _debugText += $"BEHIND WALL! Setting layer to {wall.Layer - 1}\n";
                     // Sätt spelarens layer lägre så den ritas bakom väggen
                     _player.Layer = wall.Layer - 1;
+                    break; // En vägg är tillräcklig för att bestämma layer
                 }
             }
+            
+            _debugText += $"Final Layer: {_player.Layer}\n";
         }
 
         protected override void Draw(GameTime gameTime)
@@ -170,6 +196,17 @@ namespace Drahcir_Htiek
             }
 
             _spriteBatch.End();
+
+            // Rita debug-text utan transformation
+            if (_debugFont != null)
+            {
+                _spriteBatch.Begin();
+                _spriteBatch.DrawString(_debugFont, _debugText, new Vector2(10, 10), Color.Yellow);
+                _spriteBatch.End();
+            }
+
+            // Rita debug-text i Console/Output istället
+            System.Diagnostics.Debug.WriteLine(_debugText);
 
             base.Draw(gameTime);
         }

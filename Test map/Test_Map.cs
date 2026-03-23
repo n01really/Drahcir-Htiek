@@ -27,20 +27,22 @@ namespace Drahcir_Htiek.Test_map
         public Rectangle GetCollisionBounds(Rectangle oldPlayerBounds)
         {
             // Kolla om spelaren är under eller över väggen
-            int playerCenterY = oldPlayerBounds.Center.Y;
+            int playerBottomY = oldPlayerBounds.Bottom;
             int wallCenterY = Bounds.Center.Y;
             
             // Om spelaren är under väggen (kommer underifrån)
-            if (playerCenterY > wallCenterY)
+            if (playerBottomY > wallCenterY)
             {
-                // Returnera de översta 16 pixlarna av väggen
-                return new Rectangle(Bounds.X, Bounds.Y, Bounds.Width, 16);
+                // Returnera de översta 24 pixlarna av väggen (ökat från 16)
+                // Detta skapar en större kollisionzon för att förhindra att spelaren går in i väggen
+                return new Rectangle(Bounds.X, Bounds.Y, Bounds.Width, 24);
             }
             // Om spelaren är över väggen (kommer ovanifrån)
             else
             {
-                // Returnera de nedersta 16 pixlarna av väggen
-                return new Rectangle(Bounds.X, Bounds.Bottom - 16, Bounds.Width, 16);
+                // Returnera de nedersta 24 pixlarna av väggen (ökat från 16)
+                // Detta skapar en större kollisionzon
+                return new Rectangle(Bounds.X, Bounds.Bottom - 24, Bounds.Width, 24);
             }
         }
         
