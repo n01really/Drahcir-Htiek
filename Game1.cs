@@ -64,7 +64,8 @@ namespace Drahcir_Htiek
             _Map.HorWallTexture = Content.Load<Texture2D>("Hori_Wall");
             _Map.CornerWallTexture = Content.Load<Texture2D>("Wall_Corner");
             _Map.VertWallTexture = Content.Load<Texture2D>("Vert_Wall");
-            
+            _Map.DoorTexture = Content.Load<Texture2D>("Door");
+
             _debugFont = Content.Load<SpriteFont>("DebugFont");
             _debugMode.SetFont(_debugFont);
         }
@@ -87,7 +88,7 @@ namespace Drahcir_Htiek
             if (kstate.IsKeyDown(Keys.A)) NextBounds.X -= speed;
             if (kstate.IsKeyDown(Keys.D)) NextBounds.X += speed;
 
-           
+            
             if (CollisionHandler.IsColliding(NextBounds, _player.Bounds, _Map) || CollisionHandler.IsColliding(NextBounds, _chest))
             {
                 NextBounds.X = _player.Bounds.X; // Krock! Vi återställer X-positionen.
@@ -109,6 +110,7 @@ namespace Drahcir_Htiek
             // Uppdatera spelarens layer baserat på position
             UpdatePlayerLayer();
             
+            _camera.Update();
             _camera.Follow(_player.Bounds, GraphicsDevice.Viewport);
 
             base.Update(gameTime);
@@ -203,6 +205,15 @@ namespace Drahcir_Htiek
                 drawableObjects.Add((w.Layer, () => {
                     w.Texture = _Map.CornerWallTexture;
                     w.Draw(_spriteBatch);
+                }));
+            }
+
+            foreach (var door in _Map.Doors)
+            {
+                var d = door;
+                drawableObjects.Add((d.Layer, () => {
+                    d.Texture = _Map.DoorTexture;
+                    d.Draw(_spriteBatch);
                 }));
             }
 

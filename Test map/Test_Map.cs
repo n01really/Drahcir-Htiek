@@ -117,20 +117,44 @@ namespace Drahcir_Htiek.Test_map
         }
     }
 
+    public class Door
+    {
+        public static int DefaultHeigtht = 34;
+        public static int DefaultWidth = 16;
+
+        public Rectangle Bounds;
+        public Texture2D Texture;
+        public int Layer;
+
+        public Door(int x, int y, int layer = 0)
+        {
+            Bounds = new Rectangle(x, y, DefaultWidth, DefaultHeigtht);
+            Layer = layer;
+        }
+
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            spriteBatch.Draw(Texture, Bounds, Color.White);
+        }
+    }
+
     public class Test_Map
     {
         public List<Hor_Wall> HorWalls;
         public List<Vert_Wall> VertWalls;
         public List<Corner_Wall> CornerWalls;
+        public List<Door> Doors;
         public Texture2D HorWallTexture;
         public Texture2D VertWallTexture;
         public Texture2D CornerWallTexture;
+        public Texture2D DoorTexture;
 
         public Test_Map()
         {
             HorWalls = new List<Hor_Wall>();
             VertWalls = new List<Vert_Wall>();
             CornerWalls = new List<Corner_Wall>();
+            Doors = new List<Door>();
 
             // --- RUM 1 (Startrummet uppe till vänster) ---
             HorWalls.Add(new Hor_Wall(15, 0, 1)); // Toppvägg
@@ -149,7 +173,31 @@ namespace Drahcir_Htiek.Test_map
             HorWalls.Add(new Hor_Wall(15, 122, 4)); // Bottenväggvänster
             HorWalls.Add(new Hor_Wall(109, 122, 4)); // Bottenvägghöger
             CornerWalls.Add(new Corner_Wall(62, 122, 4)); // Bottenväggmittenvänster
+            Doors.Add(new Door(78, 135, 4)); // Dörr i mitten av bottenväggen
             CornerWalls.Add(new Corner_Wall(94, 122, 4)); // BottenväggmittenHöger
+
+            //-- korridor 1 --
+            VertWalls.Add(new Vert_Wall(110, 133, 5));
+            VertWalls.Add(new Vert_Wall(110, 170, 5));
+            CornerWalls.Add(new Corner_Wall(110, 207, 6));
+            VertWalls.Add(new Vert_Wall(46, 133, 5));
+            VertWalls.Add(new Vert_Wall(46, 170, 5));
+            VertWalls.Add(new Vert_Wall(46, 207, 5));
+            VertWalls.Add(new Vert_Wall(46, 244, 5));
+            CornerWalls.Add(new Corner_Wall(46, 281, 5));
+            HorWalls.Add(new Hor_Wall(61, 281, 5));
+            HorWalls.Add(new Hor_Wall(108, 281, 5));
+            HorWalls.Add(new Hor_Wall(125, 207, 5));
+            CornerWalls.Add(new Corner_Wall(155, 281, 5));
+
+            // -- rum 2 --
+            VertWalls.Add(new Vert_Wall(155, 292, 6));
+            VertWalls.Add(new Vert_Wall(155, 329, 6));
+            VertWalls.Add(new Vert_Wall(156, 133, 5));
+            VertWalls.Add(new Vert_Wall(156, 170, 5));
+            CornerWalls.Add(new Corner_Wall(156, 207, 5));
+            CornerWalls.Add(new Corner_Wall(155, 366, 6));
+            HorWalls.Add(new Hor_Wall(171, 122, 6));
 
         }
 
@@ -180,6 +228,11 @@ namespace Drahcir_Htiek.Test_map
                 {
                     cw.Texture = CornerWallTexture;
                     cw.Draw(spriteBatch);
+                }
+                else if (wall is Door d)
+                {
+                    d.Texture = DoorTexture;
+                    d.Draw(spriteBatch);
                 }
             }
         }

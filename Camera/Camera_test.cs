@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace Drahcir_Htiek.Camera
 {
@@ -14,10 +15,30 @@ namespace Drahcir_Htiek.Camera
         public float Zoom { get; set; }
         public Matrix Transform { get; private set; }
 
+        private float minZoom = 0.5f;
+        private float maxZoom = 30.0f;
+        private float zoomSpeed = 0.1f;
+        private int previousScrollValue;
+
         public Camera_test()
         {
             Position = Vector2.Zero;
             Zoom = 15.0f;
+            previousScrollValue = Mouse.GetState().ScrollWheelValue;
+        }
+
+        public void Update()
+        {
+            MouseState mouseState = Mouse.GetState();
+            int scrollDiffrence = mouseState.ScrollWheelValue - previousScrollValue;
+
+            if (scrollDiffrence != 0)
+            {
+                Zoom += scrollDiffrence * zoomSpeed * 0.001f * Zoom; // Zoom
+                Zoom = MathHelper.Clamp(Zoom, minZoom, maxZoom);
+            }
+
+            previousScrollValue = mouseState.ScrollWheelValue;
         }
 
         public void Follow(Rectangle target, Viewport viewport)
