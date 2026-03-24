@@ -392,7 +392,7 @@ namespace Drahcir_Htiek.Logic
                         }
 
                         // Under wall (direkt efter) - ingen offset
-                        int belowWall = wall.Bounds.Bottom;
+                        int belowWall = wall.Bounds.Bottom - 11;
                         float distBelow = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, belowWall));
                         if (distBelow < snapDistance && distBelow < closestDistance)
                         {
