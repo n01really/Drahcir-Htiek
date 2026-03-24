@@ -156,71 +156,71 @@ namespace Drahcir_Htiek.Test_map
             CornerWalls = new List<Corner_Wall>();
             Doors = new List<Door>();
 
-            // --- RUM 1 (Startrummet uppe till vänster) ---
-            HorWalls.Add(new Hor_Wall(15, 0, 1)); // Toppvägg
-            HorWalls.Add(new Hor_Wall(62, 0, 1)); // Toppvägg
-            HorWalls.Add(new Hor_Wall(109, 0, 1)); // Toppvägg
-            CornerWalls.Add(new Corner_Wall(156, 0, 2)); // HögerÖvrehörn
-            VertWalls.Add(new Vert_Wall(156, 11, 3)); // Högervägg
-            VertWalls.Add(new Vert_Wall(156, 48, 3)); // Högervägg
-            VertWalls.Add(new Vert_Wall(156, 85, 3)); // Högervägg
-            CornerWalls.Add(new Corner_Wall(156, 122, 4)); // HögerNedrehörn
-            CornerWalls.Add(new Corner_Wall(0, 0, 2)); // VänsterÖvrehörn
-            VertWalls.Add(new Vert_Wall(0, 11, 3)); // Vänstervägg            
-            VertWalls.Add(new Vert_Wall(0, 48, 3)); // Vänstervägg
-            VertWalls.Add(new Vert_Wall(0, 85, 3)); // Vänstervägg
-            CornerWalls.Add(new Corner_Wall(0, 122, 4)); // VänsterNedrehörn
-            HorWalls.Add(new Hor_Wall(15, 122, 4)); // Bottenväggvänster
-            HorWalls.Add(new Hor_Wall(109, 122, 4)); // Bottenvägghöger
-            CornerWalls.Add(new Corner_Wall(62, 122, 4)); // Bottenväggmittenvänster
-            Doors.Add(new Door(78, 135, 4)); // Dörr i mitten av bottenväggen
-            CornerWalls.Add(new Corner_Wall(94, 122, 4)); // BottenväggmittenHöger
+            //// --- RUM 1 (Startrummet uppe till vänster) ---
+            //HorWalls.Add(new Hor_Wall(15, 0, 1)); // Toppvägg
+            //HorWalls.Add(new Hor_Wall(62, 0, 1)); // Toppvägg
+            //HorWalls.Add(new Hor_Wall(109, 0, 1)); // Toppvägg
+            //CornerWalls.Add(new Corner_Wall(156, 0, 2)); // HögerÖvrehörn
+            //VertWalls.Add(new Vert_Wall(156, 11, 3)); // Högervägg
+            //VertWalls.Add(new Vert_Wall(156, 48, 3)); // Högervägg
+            //VertWalls.Add(new Vert_Wall(156, 85, 3)); // Högervägg
+            //CornerWalls.Add(new Corner_Wall(156, 122, 4)); // HögerNedrehörn
+            //CornerWalls.Add(new Corner_Wall(0, 0, 2)); // VänsterÖvrehörn
+            //VertWalls.Add(new Vert_Wall(0, 11, 3)); // Vänstervägg            
+            //VertWalls.Add(new Vert_Wall(0, 48, 3)); // Vänstervägg
+            //VertWalls.Add(new Vert_Wall(0, 85, 3)); // Vänstervägg
+            //CornerWalls.Add(new Corner_Wall(0, 122, 4)); // VänsterNedrehörn
+            //HorWalls.Add(new Hor_Wall(15, 122, 4)); // Bottenväggvänster
+            //HorWalls.Add(new Hor_Wall(109, 122, 4)); // Bottenvägghöger
+            //CornerWalls.Add(new Corner_Wall(62, 122, 4)); // Bottenväggmittenvänster
+            //Doors.Add(new Door(78, 135, 4)); // Dörr i mitten av bottenväggen
+            //CornerWalls.Add(new Corner_Wall(94, 122, 4)); // BottenväggmittenHöger
 
-            //-- korridor 1 --
-            VertWalls.Add(new Vert_Wall(110, 133, 5));
-            VertWalls.Add(new Vert_Wall(110, 170, 5));
-            CornerWalls.Add(new Corner_Wall(110, 207, 6));
-            VertWalls.Add(new Vert_Wall(46, 133, 5));
-            VertWalls.Add(new Vert_Wall(46, 170, 5));
-            VertWalls.Add(new Vert_Wall(46, 207, 5));
-            VertWalls.Add(new Vert_Wall(46, 244, 5));
-            CornerWalls.Add(new Corner_Wall(46, 281, 5));
-            HorWalls.Add(new Hor_Wall(61, 281, 5));
-            HorWalls.Add(new Hor_Wall(108, 281, 5));
-            HorWalls.Add(new Hor_Wall(125, 207, 5));
-            CornerWalls.Add(new Corner_Wall(155, 281, 5));
+            ////-- korridor 1 --
+            //VertWalls.Add(new Vert_Wall(110, 133, 5));
+            //VertWalls.Add(new Vert_Wall(110, 170, 5));
+            //CornerWalls.Add(new Corner_Wall(110, 207, 6));
+            //VertWalls.Add(new Vert_Wall(46, 133, 5));
+            //VertWalls.Add(new Vert_Wall(46, 170, 5));
+            //VertWalls.Add(new Vert_Wall(46, 207, 5));
+            //VertWalls.Add(new Vert_Wall(46, 244, 5));
+            //CornerWalls.Add(new Corner_Wall(46, 281, 5));
+            //HorWalls.Add(new Hor_Wall(61, 281, 5));
+            //HorWalls.Add(new Hor_Wall(108, 281, 5));
+            //HorWalls.Add(new Hor_Wall(125, 207, 5));
+            //CornerWalls.Add(new Corner_Wall(155, 281, 5));
 
-            // -- rum 2 --
-            VertWalls.Add(new Vert_Wall(155, 292, 6));
-            VertWalls.Add(new Vert_Wall(155, 329, 6));
-            VertWalls.Add(new Vert_Wall(156, 133, 5));
-            VertWalls.Add(new Vert_Wall(156, 170, 5));
-            CornerWalls.Add(new Corner_Wall(156, 207, 5));
-            CornerWalls.Add(new Corner_Wall(155, 366, 6));
-            HorWalls.Add(new Hor_Wall(171, 122, 6));
-            HorWalls.Add(new Hor_Wall(218, 122, 6));
-            CornerWalls.Add(new Corner_Wall(265, 122, 6));
-            Doors.Add(new Door(281, 124, 6));
-            CornerWalls.Add(new Corner_Wall(297, 122, 6));
-            HorWalls.Add(new Hor_Wall(312, 122, 6));
-            HorWalls.Add(new Hor_Wall(359, 122, 6));
-            CornerWalls.Add(new Corner_Wall(406, 122, 6));
-            VertWalls.Add(new Vert_Wall(406, 133, 7));
-            VertWalls.Add(new Vert_Wall(406, 170, 7));
-            CornerWalls.Add(new Corner_Wall(406, 207, 7));
-            CornerWalls.Add(new Corner_Wall(406, 281, 7));
-            VertWalls.Add(new Vert_Wall(406, 292, 8));
-            VertWalls.Add(new Vert_Wall(406, 329, 8));
-            CornerWalls.Add(new Corner_Wall(406, 366, 8));
-            HorWalls.Add(new Hor_Wall(171, 366, 8));
-            HorWalls.Add(new Hor_Wall(218, 366, 8));
-            CornerWalls.Add(new Corner_Wall(265, 366, 8));
-            Doors.Add(new Door(281, 367, 8));
-            CornerWalls.Add(new Corner_Wall(297, 366, 8));
-            HorWalls.Add(new Hor_Wall(312, 366, 8));
-            HorWalls.Add(new Hor_Wall(359, 366, 8));
+            //// -- rum 2 --
+            //VertWalls.Add(new Vert_Wall(155, 292, 6));
+            //VertWalls.Add(new Vert_Wall(155, 329, 6));
+            //VertWalls.Add(new Vert_Wall(156, 133, 5));
+            //VertWalls.Add(new Vert_Wall(156, 170, 5));
+            //CornerWalls.Add(new Corner_Wall(156, 207, 5));
+            //CornerWalls.Add(new Corner_Wall(155, 366, 6));
+            //HorWalls.Add(new Hor_Wall(171, 122, 6));
+            //HorWalls.Add(new Hor_Wall(218, 122, 6));
+            //CornerWalls.Add(new Corner_Wall(265, 122, 6));
+            //Doors.Add(new Door(281, 124, 6));
+            //CornerWalls.Add(new Corner_Wall(297, 122, 6));
+            //HorWalls.Add(new Hor_Wall(312, 122, 6));
+            //HorWalls.Add(new Hor_Wall(359, 122, 6));
+            //CornerWalls.Add(new Corner_Wall(406, 122, 6));
+            //VertWalls.Add(new Vert_Wall(406, 133, 7));
+            //VertWalls.Add(new Vert_Wall(406, 170, 7));
+            //CornerWalls.Add(new Corner_Wall(406, 207, 7));
+            //CornerWalls.Add(new Corner_Wall(406, 281, 7));
+            //VertWalls.Add(new Vert_Wall(406, 292, 8));
+            //VertWalls.Add(new Vert_Wall(406, 329, 8));
+            //CornerWalls.Add(new Corner_Wall(406, 366, 8));
+            //HorWalls.Add(new Hor_Wall(171, 366, 8));
+            //HorWalls.Add(new Hor_Wall(218, 366, 8));
+            //CornerWalls.Add(new Corner_Wall(265, 366, 8));
+            //Doors.Add(new Door(281, 367, 8));
+            //CornerWalls.Add(new Corner_Wall(297, 366, 8));
+            //HorWalls.Add(new Hor_Wall(312, 366, 8));
+            //HorWalls.Add(new Hor_Wall(359, 366, 8));
 
-            // --- Korridor 2 ---
+            //// --- Korridor 2 ---
 
 
 

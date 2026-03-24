@@ -23,6 +23,7 @@ namespace Drahcir_Htiek.Menues
         private Texture2D _pixel;
 
         public bool StartGameClicked { get; private set; }
+        public bool CreateMapClicked { get; private set; }
         public bool QuitGameClicked { get; private set; }
 
         public Main_menu(int screenWidth, int screenHeight)
@@ -69,11 +70,14 @@ namespace Drahcir_Htiek.Menues
                 {
                     StartGameClicked = true;
                 }
+                else if (_createMapButton.Contains(mousePosition))
+                {
+                    CreateMapClicked = true;
+                }
                 else if (_quitGameButton.Contains(mousePosition))
                 {
                     QuitGameClicked = true;
                 }
-                // createMapButton klick kan läggas till senare
             }
 
             _previousMouseState = currentMouseState;
@@ -107,6 +111,7 @@ namespace Drahcir_Htiek.Menues
         public void Reset()
         {
             StartGameClicked = false;
+            CreateMapClicked = false;
             QuitGameClicked = false;
         }
     }
