@@ -1,4 +1,4 @@
-
+using Drahcir_Htiek.Menues;
 using Drahcir_Htiek.Test_map;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -42,20 +42,26 @@ namespace Drahcir_Htiek.Logic
         private int _gridSize = 16;
         private bool _smartSnapping = true;
         private Camera.Map_Maker_Camera _camera;
+        
+        private Save_Map_Menu _saveMapMenu;
+        private bool _lastActionWasSave = false;
 
         public Map_Maker()
         {
             _camera = new Camera.Map_Maker_Camera();
+            _saveMapMenu = new Save_Map_Menu();
         }
 
         public void SetFont(SpriteFont font)
         {
             _font = font;
+            _saveMapMenu.SetFont(font);
         }
 
         public void SetPixelTexture(Texture2D pixel)
         {
             _pixel = pixel;
+            _saveMapMenu.SetPixelTexture(pixel);
         }
 
         public void Update(Viewport viewport)
@@ -72,6 +78,34 @@ namespace Drahcir_Htiek.Logic
             }
 
             _camera.Update(viewport);
+
+            // Om save/load-menyn är aktiv, hantera bara den
+            if (_saveMapMenu.IsActive)
+            {
+                _saveMapMenu.Update();
+                
+                if (_saveMapMenu.MapSelected)
+                {
+                    string mapName = _saveMapMenu.SelectedMapName;
+                    
+                    if (_lastActionWasSave)
+                    {
+                        SaveMap(mapName);
+                        System.Diagnostics.Debug.WriteLine($"Map saved as: {mapName}");
+                    }
+                    else
+                    {
+                        LoadMap(mapName);
+                        System.Diagnostics.Debug.WriteLine($"Map loaded: {mapName}");
+                    }
+                    
+                    _saveMapMenu.Close();
+                }
+                
+                _previousKeyState = currentKeyState;
+                _previousMouseState = currentMouseState;
+                return; // Avsluta Update tidigt
+            }
 
             if (currentKeyState.IsKeyDown(Keys.D1) && !_previousKeyState.IsKeyDown(Keys.D1))
                 _currentTool = EditorTool.HorizontalWall;
@@ -103,22 +137,22 @@ namespace Drahcir_Htiek.Logic
                 System.Diagnostics.Debug.WriteLine("Camera reset");
             }
 
-            // Spara karta med Ctrl+S
-            if (currentKeyState.IsKeyDown(Keys.LeftControl) &&
-                currentKeyState.IsKeyDown(Keys.S) &&
+            // Visa save-meny med Ctrl+S
+            if (currentKeyState.IsKeyDown(Keys.LeftControl) && 
+                currentKeyState.IsKeyDown(Keys.S) && 
                 !_previousKeyState.IsKeyDown(Keys.S))
             {
-                SaveMap("my_map");
-                System.Diagnostics.Debug.WriteLine("Map saved!");
+                _saveMapMenu.ShowSaveMenu();
+                _lastActionWasSave = true;
             }
 
-            // Ladda karta med Ctrl+L
-            if (currentKeyState.IsKeyDown(Keys.LeftControl) &&
-                currentKeyState.IsKeyDown(Keys.L) &&
+            // Visa load-meny med Ctrl+L
+            if (currentKeyState.IsKeyDown(Keys.LeftControl) && 
+                currentKeyState.IsKeyDown(Keys.L) && 
                 !_previousKeyState.IsKeyDown(Keys.L))
             {
-                LoadMap("my_map");
-                System.Diagnostics.Debug.WriteLine("Map loaded!");
+                _saveMapMenu.ShowLoadMenu();
+                _lastActionWasSave = false;
             }
 
             if (currentMouseState.LeftButton == ButtonState.Pressed && 
@@ -464,6 +498,7 @@ namespace Drahcir_Htiek.Logic
 
             spriteBatch.Begin(samplerState: SamplerState.PointClamp);
             DrawUI(spriteBatch);
+            _saveMapMenu.Draw(spriteBatch, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height);
             spriteBatch.End();
         }
 
@@ -504,162 +539,6 @@ namespace Drahcir_Htiek.Logic
             Vector2 snappedPos = GetSmartSnappedPosition(worldPos, _currentTool);
             int snappedX = (int)snappedPos.X;
             int snappedY = (int)snappedPos.Y;
-
-            // Rita snap-linjer om smart snapping är aktivt
-            if (_smartSnapping)
-            {
-                switch (_currentTool)
-                {
-                    case EditorTool.HorizontalWall:
-                        foreach (var wall in HorWalls)
-                        {
-                            int rightEdge = wall.Bounds.Right - 1;
-                            if (System.Math.Abs(worldPos.X - rightEdge) < 64 &&
-                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(rightEdge, wall.Bounds.Y - 10, 2, 68);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                        }
-                        foreach (var wall in CornerWalls)
-                        {
-                            int rightEdge = wall.Bounds.Right - 1;
-                            if (System.Math.Abs(worldPos.X - rightEdge) < 64 &&
-                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(rightEdge, wall.Bounds.Y - 10, 2, 68);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                            if (System.Math.Abs(worldPos.Y - wall.Bounds.Bottom) < 64 &&
-                                System.Math.Abs(worldPos.X - rightEdge) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(rightEdge - 10, wall.Bounds.Bottom, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                        }
-                        foreach (var wall in VertWalls)
-                        {
-                            int rightEdge = wall.Bounds.Right - 1;
-                            if (System.Math.Abs(worldPos.X - rightEdge) < 64 &&
-                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(rightEdge, wall.Bounds.Y - 10, 2, 68);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                            if (System.Math.Abs(worldPos.Y - wall.Bounds.Bottom) < 64 &&
-                                System.Math.Abs(worldPos.X - rightEdge) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(rightEdge - 10, wall.Bounds.Bottom, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                        }
-                        break;
-
-                    case EditorTool.VerticalWall:
-                        foreach (var wall in CornerWalls)
-                        {
-                            int belowCorner = wall.Bounds.Y + 11;
-                            if (System.Math.Abs(worldPos.Y - belowCorner) < 64 &&
-                                System.Math.Abs(worldPos.X - wall.Bounds.X) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(wall.Bounds.X - 10, belowCorner, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                        }
-                        foreach (var wall in VertWalls)
-                        {
-                            int belowWall = wall.Bounds.Bottom - 11;
-                            if (System.Math.Abs(worldPos.Y - belowWall) < 64 &&
-                                System.Math.Abs(worldPos.X - wall.Bounds.X) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(wall.Bounds.X - 10, belowWall, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                        }
-                        foreach (var wall in HorWalls)
-                        {
-                            int belowWall = wall.Bounds.Y + 11;
-                            if (System.Math.Abs(worldPos.Y - belowWall) < 64 &&
-                                System.Math.Abs(worldPos.X - wall.Bounds.X) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(wall.Bounds.X - 10, belowWall, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                            int rightEdge = wall.Bounds.Right - 1;
-                            if (System.Math.Abs(worldPos.Y - belowWall) < 64 &&
-                                System.Math.Abs(worldPos.X - rightEdge) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(rightEdge - 10, belowWall, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                        }
-                        break;
-
-                    case EditorTool.CornerWall:
-                        foreach (var wall in HorWalls)
-                        {
-                            int leftEdge = wall.Bounds.X - 15;
-                            if (System.Math.Abs(worldPos.X - leftEdge) < 64 &&
-                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(leftEdge, wall.Bounds.Y - 10, 2, 68);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                            
-                            int rightEdge = wall.Bounds.Right - 1;
-                            if (System.Math.Abs(worldPos.X - rightEdge) < 64 &&
-                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(rightEdge, wall.Bounds.Y - 10, 2, 68);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                            
-                            if (System.Math.Abs(worldPos.Y - wall.Bounds.Bottom) < 64 &&
-                                System.Math.Abs(worldPos.X - rightEdge) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(rightEdge - 10, wall.Bounds.Bottom, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                            
-                            int leftEdge2 = wall.Bounds.X - 16;
-                            if (System.Math.Abs(worldPos.Y - wall.Bounds.Bottom) < 64 &&
-                                System.Math.Abs(worldPos.X - leftEdge2) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(leftEdge2 - 10, wall.Bounds.Bottom, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                        }
-                        foreach (var wall in VertWalls)
-                        {
-                            int belowWall = wall.Bounds.Bottom - 11;
-                            if (System.Math.Abs(worldPos.Y - belowWall) < 64 &&
-                                System.Math.Abs(worldPos.X - wall.Bounds.X) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(wall.Bounds.X - 10, belowWall, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                        }
-                        foreach (var wall in CornerWalls)
-                        {
-                            int belowCorner = wall.Bounds.Bottom - 11;
-                            if (System.Math.Abs(worldPos.Y - belowCorner) < 64 &&
-                                System.Math.Abs(worldPos.X - wall.Bounds.X) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(wall.Bounds.X - 10, belowCorner, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                            
-                            int rightEdge2 = wall.Bounds.Right - 1;
-                            if (System.Math.Abs(worldPos.X - rightEdge2) < 64 &&
-                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(rightEdge2, wall.Bounds.Y - 10, 2, 68);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                        }
-                        break;
-                }
-            }
 
             Rectangle previewRect;
             Color previewColor = Color.Yellow * 0.5f;
@@ -833,34 +712,32 @@ namespace Drahcir_Htiek.Logic
 
             foreach (var wallData in mapData.HorWalls)
             {
-                HorWalls.Add(new Test_map.Hor_Wall(wallData.X, wallData.Y, wallData.Layer));
+                HorWalls.Add(new Hor_Wall(wallData.X, wallData.Y, wallData.Layer));
             }
 
             foreach (var wallData in mapData.VertWalls)
             {
-                VertWalls.Add(new Test_map.Vert_Wall(wallData.X, wallData.Y, wallData.Layer));
+                VertWalls.Add(new Vert_Wall(wallData.X, wallData.Y, wallData.Layer));
             }
 
             foreach (var wallData in mapData.CornerWalls)
             {
-                CornerWalls.Add(new Test_map.Corner_Wall(wallData.X, wallData.Y, wallData.Layer));
+                CornerWalls.Add(new Corner_Wall(wallData.X, wallData.Y, wallData.Layer));
             }
 
             foreach (var wallData in mapData.Doors)
             {
-                Doors.Add(new Test_map.Door(wallData.X, wallData.Y, wallData.Layer));
+                Doors.Add(new Door(wallData.X, wallData.Y, wallData.Layer));
             }
 
             foreach (var chestData in mapData.Chests)
             {
-                Chests.Add(new Test_map.Test_Chest(chestData.X, chestData.Y));
+                Chests.Add(new Test_Chest(chestData.X, chestData.Y));
             }
 
             PlayerStartPosition = mapData.PlayerStartPosition;
 
             System.Diagnostics.Debug.WriteLine($"Map loaded from: {filepath}");
         }
-
- 
     }
 }
