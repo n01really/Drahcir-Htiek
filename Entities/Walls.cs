@@ -138,7 +138,7 @@ namespace Drahcir_Htiek.Test_map
         }
     }
 
-    public class Test_Map
+    public class Walls
     {
         public List<Hor_Wall> HorWalls;
         public List<Vert_Wall> VertWalls;
@@ -149,7 +149,7 @@ namespace Drahcir_Htiek.Test_map
         public Texture2D CornerWallTexture;
         public Texture2D DoorTexture;
 
-        public Test_Map()
+        public Walls()
         {
             HorWalls = new List<Hor_Wall>();
             VertWalls = new List<Vert_Wall>();

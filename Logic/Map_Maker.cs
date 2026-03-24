@@ -36,7 +36,7 @@ namespace Drahcir_Htiek.Logic
         public List<Vert_Wall> VertWalls { get; private set; } = new List<Vert_Wall>();
         public List<Corner_Wall> CornerWalls { get; private set; } = new List<Corner_Wall>();
         public List<Door> Doors { get; private set; } = new List<Door>();
-        public List<Test_Chest> Chests { get; private set; } = new List<Test_Chest>();
+        public List<Chests> Chests { get; private set; } = new List<Chests>();
         public Vector2? PlayerStartPosition { get; private set; } = null;
 
         private int _gridSize = 16;
@@ -686,7 +686,7 @@ namespace Drahcir_Htiek.Logic
                     break;
 
                 case EditorTool.Chest:
-                    Chests.Add(new Test_Chest(snappedX, snappedY));
+                    Chests.Add(new Chests(snappedX, snappedY));
                     break;
             }
         }
@@ -1217,7 +1217,7 @@ namespace Drahcir_Htiek.Logic
 
             foreach (var chestData in mapData.Chests)
             {
-                Chests.Add(new Test_Chest(chestData.X, chestData.Y));
+                Chests.Add(new Chests(chestData.X, chestData.Y));
             }
 
             PlayerStartPosition = mapData.PlayerStartPosition;

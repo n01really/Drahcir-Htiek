@@ -18,8 +18,8 @@ namespace Drahcir_Htiek
 
         private Texture2D _pixel;
         private Player _player;
-        private Test_Map _Map;
-        private Test_Chest _chest;
+        private Walls _Map;
+        private Chests _chest;
         private Camera_test _camera;
         private SpriteFont _debugFont;
         private Debug_Mode _debugMode;
@@ -44,11 +44,11 @@ namespace Drahcir_Htiek
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-            _Map = new Test_Map();
+            _Map = new Walls();
 
             _player = new Player(54, 58);
 
-            _chest = new Test_Chest(260, 180);
+            _chest = new Chests(260, 180);
 
             _camera = new Camera_test();
 

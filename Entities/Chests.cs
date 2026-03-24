@@ -8,14 +8,14 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Drahcir_Htiek.Test_map
 {
-    public class Test_Chest
+    public class Chests
     {
         public Rectangle Bounds;
         //public Color Color = Color.Green;
         public Texture2D Texture;
 
 
-        public Test_Chest(int x, int y)
+        public Chests(int x, int y)
         {
             Bounds = new Rectangle(x, y, 16, 16);
         }
