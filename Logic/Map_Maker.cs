@@ -191,6 +191,7 @@ namespace Drahcir_Htiek.Logic
             switch (tool)
             {
                 case EditorTool.HorizontalWall:
+                    // Snappa till HÖGER eller VÄNSTER om HorWalls
                     foreach (var wall in HorWalls)
                     {
                         int rightEdge = wall.Bounds.Right - 1;
@@ -200,8 +201,17 @@ namespace Drahcir_Htiek.Logic
                             bestSnapPos = new Vector2(rightEdge, wall.Bounds.Y);
                             return bestSnapPos;
                         }
+                        
+                        int leftEdge = wall.Bounds.X - 47;
+                        if (System.Math.Abs(worldPos.X - leftEdge) < snapDistance &&
+                            System.Math.Abs(worldPos.Y - wall.Bounds.Y) < snapDistance)
+                        {
+                            bestSnapPos = new Vector2(leftEdge, wall.Bounds.Y);
+                            return bestSnapPos;
+                        }
                     }
 
+                    // Snappa till HÖGER eller VÄNSTER om CornerWalls
                     foreach (var wall in CornerWalls)
                     {
                         int rightEdge = wall.Bounds.Right - 1;
@@ -218,8 +228,17 @@ namespace Drahcir_Htiek.Logic
                             bestSnapPos = new Vector2(rightEdge, wall.Bounds.Bottom);
                             return bestSnapPos;
                         }
+                        
+                        int leftEdge = wall.Bounds.X - 47;
+                        if (System.Math.Abs(worldPos.X - leftEdge) < snapDistance &&
+                            System.Math.Abs(worldPos.Y - wall.Bounds.Y) < snapDistance)
+                        {
+                            bestSnapPos = new Vector2(leftEdge, wall.Bounds.Y);
+                            return bestSnapPos;
+                        }
                     }
 
+                    // Snappa till HÖGER eller VÄNSTER om VertWalls
                     foreach (var wall in VertWalls)
                     {
                         int rightEdge = wall.Bounds.Right - 1;
@@ -234,6 +253,14 @@ namespace Drahcir_Htiek.Logic
                             System.Math.Abs(worldPos.X - rightEdge) < snapDistance)
                         {
                             bestSnapPos = new Vector2(rightEdge, wall.Bounds.Bottom);
+                            return bestSnapPos;
+                        }
+                        
+                        int leftEdge = wall.Bounds.X - 47;
+                        if (System.Math.Abs(worldPos.X - leftEdge) < snapDistance &&
+                            System.Math.Abs(worldPos.Y - wall.Bounds.Y) < snapDistance)
+                        {
+                            bestSnapPos = new Vector2(leftEdge, wall.Bounds.Y);
                             return bestSnapPos;
                         }
                     }
@@ -272,7 +299,7 @@ namespace Drahcir_Htiek.Logic
                             return bestSnapPos;
                         }
 
-                        int rightEdge = wall.Bounds.Right - 1;
+                        int rightEdge = wall.Bounds.Right - 16;
                         if (System.Math.Abs(worldPos.Y - belowWall) < snapDistance &&
                             System.Math.Abs(worldPos.X - rightEdge) < snapDistance)
                         {
@@ -539,6 +566,185 @@ namespace Drahcir_Htiek.Logic
             Vector2 snappedPos = GetSmartSnappedPosition(worldPos, _currentTool);
             int snappedX = (int)snappedPos.X;
             int snappedY = (int)snappedPos.Y;
+
+            if (_smartSnapping)
+            {
+                switch (_currentTool)
+                {
+                    case EditorTool.HorizontalWall:
+                        foreach (var wall in HorWalls)
+                        {
+                            int rightEdge = wall.Bounds.Right - 1;
+                            if (System.Math.Abs(worldPos.X - rightEdge) < 64 &&
+                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(rightEdge, wall.Bounds.Y - 10, 2, 68);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                            
+                            int leftEdge = wall.Bounds.X - 47;
+                            if (System.Math.Abs(worldPos.X - leftEdge) < 64 &&
+                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(leftEdge, wall.Bounds.Y - 10, 2, 68);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                        }
+                        foreach (var wall in CornerWalls)
+                        {
+                            int rightEdge = wall.Bounds.Right - 1;
+                            if (System.Math.Abs(worldPos.X - rightEdge) < 64 &&
+                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(rightEdge, wall.Bounds.Y - 10, 2, 68);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                            if (System.Math.Abs(worldPos.Y - wall.Bounds.Bottom) < 64 &&
+                                System.Math.Abs(worldPos.X - rightEdge) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(rightEdge - 10, wall.Bounds.Bottom, 36, 2);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                            
+                            int leftEdge = wall.Bounds.X - 47;
+                            if (System.Math.Abs(worldPos.X - leftEdge) < 64 &&
+                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(leftEdge, wall.Bounds.Y - 10, 2, 68);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                        }
+                        foreach (var wall in VertWalls)
+                        {
+                            int rightEdge = wall.Bounds.Right - 1;
+                            if (System.Math.Abs(worldPos.X - rightEdge) < 64 &&
+                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(rightEdge, wall.Bounds.Y - 10, 2, 68);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                            if (System.Math.Abs(worldPos.Y - wall.Bounds.Bottom) < 64 &&
+                                System.Math.Abs(worldPos.X - rightEdge) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(rightEdge - 10, wall.Bounds.Bottom, 36, 2);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                            
+                            int leftEdge = wall.Bounds.X - 47;
+                            if (System.Math.Abs(worldPos.X - leftEdge) < 64 &&
+                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(leftEdge, wall.Bounds.Y - 10, 2, 68);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                        }
+                        break;
+
+                    case EditorTool.VerticalWall:
+                        foreach (var wall in CornerWalls)
+                        {
+                            int belowCorner = wall.Bounds.Y + 11;
+                            if (System.Math.Abs(worldPos.Y - belowCorner) < 64 &&
+                                System.Math.Abs(worldPos.X - wall.Bounds.X) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(wall.Bounds.X - 10, belowCorner, 36, 2);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                        }
+                        foreach (var wall in VertWalls)
+                        {
+                            int belowWall = wall.Bounds.Bottom - 11;
+                            if (System.Math.Abs(worldPos.Y - belowWall) < 64 &&
+                                System.Math.Abs(worldPos.X - wall.Bounds.X) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(wall.Bounds.X - 10, belowWall, 36, 2);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                        }
+                        foreach (var wall in HorWalls)
+                        {
+                            int belowWall = wall.Bounds.Y + 11;
+                            if (System.Math.Abs(worldPos.Y - belowWall) < 64 &&
+                                System.Math.Abs(worldPos.X - wall.Bounds.X) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(wall.Bounds.X - 10, belowWall, 36, 2);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                            int rightEdge = wall.Bounds.Right - 16;
+                            if (System.Math.Abs(worldPos.Y - belowWall) < 64 &&
+                                System.Math.Abs(worldPos.X - rightEdge) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(rightEdge - 10, belowWall, 36, 2);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                        }
+                        break;
+
+                    case EditorTool.CornerWall:
+                        foreach (var wall in HorWalls)
+                        {
+                            int leftEdge = wall.Bounds.X - 15;
+                            if (System.Math.Abs(worldPos.X - leftEdge) < 64 &&
+                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(leftEdge, wall.Bounds.Y - 10, 2, 68);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                            
+                            int rightEdge = wall.Bounds.Right - 1;
+                            if (System.Math.Abs(worldPos.X - rightEdge) < 64 &&
+                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(rightEdge, wall.Bounds.Y - 10, 2, 68);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                            
+                            if (System.Math.Abs(worldPos.Y - wall.Bounds.Bottom) < 64 &&
+                                System.Math.Abs(worldPos.X - rightEdge) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(rightEdge - 10, wall.Bounds.Bottom, 36, 2);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                            
+                            int leftEdge2 = wall.Bounds.X - 16;
+                            if (System.Math.Abs(worldPos.Y - wall.Bounds.Bottom) < 64 &&
+                                System.Math.Abs(worldPos.X - leftEdge2) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(leftEdge2 - 10, wall.Bounds.Bottom, 36, 2);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                        }
+                        foreach (var wall in VertWalls)
+                        {
+                            int belowWall = wall.Bounds.Bottom - 11;
+                            if (System.Math.Abs(worldPos.Y - belowWall) < 64 &&
+                                System.Math.Abs(worldPos.X - wall.Bounds.X) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(wall.Bounds.X - 10, belowWall, 36, 2);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                        }
+                        foreach (var wall in CornerWalls)
+                        {
+                            int belowCorner = wall.Bounds.Bottom - 11;
+                            if (System.Math.Abs(worldPos.Y - belowCorner) < 64 &&
+                                System.Math.Abs(worldPos.X - wall.Bounds.X) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(wall.Bounds.X - 10, belowCorner, 36, 2);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                            
+                            int rightEdge2 = wall.Bounds.Right - 1;
+                            if (System.Math.Abs(worldPos.X - rightEdge2) < 64 &&
+                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
+                            {
+                                Rectangle snapLine = new Rectangle(rightEdge2, wall.Bounds.Y - 10, 2, 68);
+                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
+                            }
+                        }
+                        break;
+                }
+            }
 
             Rectangle previewRect;
             Color previewColor = Color.Yellow * 0.5f;
