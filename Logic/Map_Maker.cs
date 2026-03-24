@@ -379,7 +379,7 @@ namespace Drahcir_Htiek.Logic
                     // Snappa till alla VertWalls (topp och botten)
                     foreach (var wall in VertWalls)
                     {
-                        // Exakt samma position (överlappande)
+                        // Exakt samma position (överlappande) - INGEN offset, de ska överlappa helt
                         float distSamePos = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, wall.Bounds.Y));
                         if (distSamePos < snapDistance && distSamePos < closestDistance)
                         {
@@ -387,7 +387,7 @@ namespace Drahcir_Htiek.Logic
                             closestDistance = distSamePos;
                         }
 
-                        // Under wall (direkt efter)
+                        // Under wall (direkt efter) - ingen offset
                         int belowWall = wall.Bounds.Bottom;
                         float distBelow = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, belowWall));
                         if (distBelow < snapDistance && distBelow < closestDistance)
@@ -396,8 +396,8 @@ namespace Drahcir_Htiek.Logic
                             closestDistance = distBelow;
                         }
 
-                        // Över wall (direkt innan)
-                        int aboveWall = wall.Bounds.Y - DefaultHeight;
+                        // Över wall (direkt innan) - använd bara DefaultHeight offset
+                        int aboveWall = wall.Bounds.Y - 37;
                         float distAbove = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, aboveWall));
                         if (distAbove < snapDistance && distAbove < closestDistance)
                         {
@@ -405,12 +405,12 @@ namespace Drahcir_Htiek.Logic
                             closestDistance = distAbove;
                         }
 
-                        // Till höger av wall, samma Y
+                        // Till höger av wall, kompensera för visuell offset (samma som corner wall)
                         int rightX = wall.Bounds.Right;
-                        float distRightSame = Vector2.Distance(worldPos, new Vector2(rightX, wall.Bounds.Y));
+                        float distRightSame = Vector2.Distance(worldPos, new Vector2(rightX, wall.Bounds.Y - 37));
                         if (distRightSame < snapDistance && distRightSame < closestDistance)
                         {
-                            bestSnapPos = new Vector2(rightX, wall.Bounds.Y);
+                            bestSnapPos = new Vector2(rightX, wall.Bounds.Y - 37);
                             closestDistance = distRightSame;
                         }
 
@@ -422,7 +422,7 @@ namespace Drahcir_Htiek.Logic
                             closestDistance = distRightBelow;
                         }
 
-                        // Till höger av wall, över
+                        // Till höger av wall, över - använd samma aboveWall
                         float distRightAbove = Vector2.Distance(worldPos, new Vector2(rightX, aboveWall));
                         if (distRightAbove < snapDistance && distRightAbove < closestDistance)
                         {
@@ -430,12 +430,12 @@ namespace Drahcir_Htiek.Logic
                             closestDistance = distRightAbove;
                         }
 
-                        // Till vänster av wall, samma Y
+                        // Till vänster av wall, kompensera för visuell offset (samma som corner wall)
                         int leftX = wall.Bounds.X - DefaultThickness;
-                        float distLeftSame = Vector2.Distance(worldPos, new Vector2(leftX, wall.Bounds.Y));
+                        float distLeftSame = Vector2.Distance(worldPos, new Vector2(leftX, wall.Bounds.Y - 37));
                         if (distLeftSame < snapDistance && distLeftSame < closestDistance)
                         {
-                            bestSnapPos = new Vector2(leftX, wall.Bounds.Y);
+                            bestSnapPos = new Vector2(leftX, wall.Bounds.Y - 37);
                             closestDistance = distLeftSame;
                         }
 
@@ -447,7 +447,7 @@ namespace Drahcir_Htiek.Logic
                             closestDistance = distLeftBelow;
                         }
 
-                        // Till vänster av wall, över
+                        // Till vänster av wall, över - använd samma aboveWall
                         float distLeftAbove = Vector2.Distance(worldPos, new Vector2(leftX, aboveWall));
                         if (distLeftAbove < snapDistance && distLeftAbove < closestDistance)
                         {
