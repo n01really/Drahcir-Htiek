@@ -138,7 +138,29 @@ namespace Drahcir_Htiek.Test_map
         }
     }
 
-    public class Walls
+    public class Dundgeon_Floor
+    {
+        public static int DefaultTileHeight = 16;
+        public static int DefaultTileWidth = 16;
+
+        public Rectangle Bounds;
+        public Texture2D Texture;
+        public int Layer;
+
+        public Dundgeon_Floor(int x, int y, int layer = 0)
+        {
+            Bounds = new Rectangle(x, y, DefaultTileWidth, DefaultTileHeight);
+            Layer = layer;
+        }
+
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            spriteBatch.Draw(Texture, Bounds, Color.White);
+        }
+
+    }
+
+    public class Dundgeon
     {
         public List<Hor_Wall> HorWalls;
         public List<Vert_Wall> VertWalls;
@@ -148,8 +170,9 @@ namespace Drahcir_Htiek.Test_map
         public Texture2D VertWallTexture;
         public Texture2D CornerWallTexture;
         public Texture2D DoorTexture;
+        public Texture2D DundgeonFloorTexture;
 
-        public Walls()
+        public Dundgeon()
         {
             HorWalls = new List<Hor_Wall>();
             VertWalls = new List<Vert_Wall>();

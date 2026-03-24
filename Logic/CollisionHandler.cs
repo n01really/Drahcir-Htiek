@@ -11,7 +11,7 @@ namespace Drahcir_Htiek.Logic
 {
     public static class CollisionHandler
     {
-        public static bool IsColliding(Rectangle newBounds, Rectangle oldBounds, Walls map)
+        public static bool IsColliding(Rectangle newBounds, Rectangle oldBounds, Dundgeon map)
         { 
             foreach (var wall in map.HorWalls)
             {

@@ -1,13 +1,13 @@
-using Drahcir_Htiek.Menues;
-using Drahcir_Htiek.Test_map;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.IO;
 using System.Text.Json;
+using System;
+using Drahcir_Htiek.Test_map;
+using Drahcir_Htiek.Menues;
 
 namespace Drahcir_Htiek.Logic
 {
@@ -18,7 +18,8 @@ namespace Drahcir_Htiek.Logic
         CornerWall,
         Door,
         Player,
-        Chest
+        Chest,
+        Floor
     }
 
     internal class Map_Maker
@@ -37,6 +38,7 @@ namespace Drahcir_Htiek.Logic
         public List<Corner_Wall> CornerWalls { get; private set; } = new List<Corner_Wall>();
         public List<Door> Doors { get; private set; } = new List<Door>();
         public List<Chests> Chests { get; private set; } = new List<Chests>();
+        public List<Dundgeon_Floor> FloorTiles { get; private set; } = new List<Dundgeon_Floor>();
         public Vector2? PlayerStartPosition { get; private set; } = null;
 
         private int _gridSize = 16;
@@ -123,6 +125,8 @@ namespace Drahcir_Htiek.Logic
                 _currentTool = EditorTool.Player;
             if (currentKeyState.IsKeyDown(Keys.D6) && !_previousKeyState.IsKeyDown(Keys.D6))
                 _currentTool = EditorTool.Chest;
+            if (currentKeyState.IsKeyDown(Keys.D7) && !_previousKeyState.IsKeyDown(Keys.D7))
+                _currentTool = EditorTool.Floor;
 
             if (currentKeyState.IsKeyDown(Keys.Q) && !_previousKeyState.IsKeyDown(Keys.Q))
                 _currentLayer = System.Math.Max(0, _currentLayer - 1);
@@ -308,7 +312,7 @@ namespace Drahcir_Htiek.Logic
                         }
 
                         // Under corner (direkt under hela corner wall)
-                        int belowCorner = wall.Bounds.Bottom;
+                        int belowCorner = wall.Bounds.Bottom - 37;
                         float distBelow = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, belowCorner));
                         if (distBelow < snapDistance && distBelow < closestDistance)
                         {
@@ -688,6 +692,10 @@ namespace Drahcir_Htiek.Logic
                 case EditorTool.Chest:
                     Chests.Add(new Chests(snappedX, snappedY));
                     break;
+
+                case EditorTool.Floor:
+                    FloorTiles.Add(new Dundgeon_Floor(snappedX, snappedY, _currentLayer));
+                    break;
             }
         }
 
@@ -701,6 +709,7 @@ namespace Drahcir_Htiek.Logic
             CornerWalls.RemoveAll(w => w.Bounds.Intersects(mouseRect));
             Doors.RemoveAll(d => d.Bounds.Intersects(mouseRect));
             Chests.RemoveAll(c => c.Bounds.Intersects(mouseRect));
+            FloorTiles.RemoveAll(f => f.Bounds.Intersects(mouseRect));
 
             if (PlayerStartPosition.HasValue)
             {
@@ -715,9 +724,18 @@ namespace Drahcir_Htiek.Logic
 
         public void Draw(SpriteBatch spriteBatch, GraphicsDevice graphicsDevice, MouseState mouseState,
                         Texture2D horWallTexture, Texture2D vertWallTexture, Texture2D cornerWallTexture,
-                        Texture2D chestTexture)
+                        Texture2D chestTexture, Texture2D floorTexture)
         {
             spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _camera.Transform);
+
+            // Rita floor tiles först (under allt annat)
+            foreach (var floor in FloorTiles)
+            {
+                if (floorTexture != null)
+                    spriteBatch.Draw(floorTexture, floor.Bounds, Color.White);
+                else
+                    spriteBatch.Draw(_pixel, floor.Bounds, Color.DarkGray);
+            }
 
             DrawGrid(spriteBatch, graphicsDevice);
 
@@ -1050,6 +1068,10 @@ namespace Drahcir_Htiek.Logic
                     previewRect = new Rectangle(snappedX, snappedY, 16, 16);
                     previewColor = Color.Green * 0.5f;
                     break;
+                case EditorTool.Floor:
+                    previewRect = new Rectangle(snappedX, snappedY, 16, 16);
+                    previewColor = Color.Brown * 0.5f;
+                    break;
                 default:
                     return;
             }
@@ -1065,7 +1087,7 @@ namespace Drahcir_Htiek.Logic
             List<string> uiLines = new List<string>
             {
                 "MAP EDITOR",
-                $"Current Tool: {_currentTool} (1-6 to switch)",
+                $"Current Tool: {_currentTool} (1-7 to switch)",
                 $"Layer: {_currentLayer} (Q/E to change)",
                 $"Zoom: {_camera.Zoom:F2}x (Scroll Wheel)",
                 $"Smart Snap: {(_smartSnapping ? "ON" : "OFF")} (T to toggle)",
@@ -1076,10 +1098,10 @@ namespace Drahcir_Htiek.Logic
                 "",
                 "Tools:",
                 "1: Horizontal Wall | 2: Vertical Wall | 3: Corner Wall",
-                "4: Door | 5: Player Start | 6: Chest",
+                "4: Door | 5: Player Start | 6: Chest | 7: Floor",
                 "Ctrl+S: Save Map | Ctrl+L: Load Map",
                 "",
-                $"Objects: Walls={HorWalls.Count + VertWalls.Count + CornerWalls.Count}, Chests={Chests.Count}",
+                $"Objects: Walls={HorWalls.Count + VertWalls.Count + CornerWalls.Count}, Chests={Chests.Count}, Floors={FloorTiles.Count}",
                 $"Camera: X={_camera.Position.X:F0}, Y={_camera.Position.Y:F0}"
             };
 
@@ -1161,6 +1183,18 @@ namespace Drahcir_Htiek.Logic
                 });
             }
 
+            foreach (var floor in FloorTiles)
+            {
+                mapData.FloorTiles.Add(new FloorTileData
+                {
+                    X = floor.Bounds.X,
+                    Y = floor.Bounds.Y,
+                    Width = floor.Bounds.Width,
+                    Height = floor.Bounds.Height,
+                    Layer = floor.Layer
+                });
+            }
+
             string projectRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..");
             string mapsFolder = Path.Combine(projectRoot, "Maps");
             if (!Directory.Exists(mapsFolder))
@@ -1194,6 +1228,7 @@ namespace Drahcir_Htiek.Logic
             CornerWalls.Clear();
             Doors.Clear();
             Chests.Clear();
+            FloorTiles.Clear();
 
             foreach (var wallData in mapData.HorWalls)
             {
@@ -1218,6 +1253,11 @@ namespace Drahcir_Htiek.Logic
             foreach (var chestData in mapData.Chests)
             {
                 Chests.Add(new Chests(chestData.X, chestData.Y));
+            }
+
+            foreach (var floorData in mapData.FloorTiles)
+            {
+                FloorTiles.Add(new Dundgeon_Floor(floorData.X, floorData.Y, floorData.Layer));
             }
 
             PlayerStartPosition = mapData.PlayerStartPosition;

@@ -18,7 +18,7 @@ namespace Drahcir_Htiek
 
         private Texture2D _pixel;
         private Player _player;
-        private Walls _Map;
+        private Dundgeon _Map;
         private Chests _chest;
         private Camera_test _camera;
         private SpriteFont _debugFont;
@@ -44,7 +44,7 @@ namespace Drahcir_Htiek
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-            _Map = new Walls();
+            _Map = new Dundgeon();
 
             _player = new Player(54, 58);
 
@@ -76,6 +76,7 @@ namespace Drahcir_Htiek
             _Map.CornerWallTexture = Content.Load<Texture2D>("Wall_Corner");
             _Map.VertWallTexture = Content.Load<Texture2D>("Vert_Wall");
             _Map.DoorTexture = Content.Load<Texture2D>("Door");
+            _Map.DundgeonFloorTexture = Content.Load<Texture2D>("Dundgeon_Floor");
 
             _debugFont = Content.Load<SpriteFont>("DebugFont");
             _debugMode.SetFont(_debugFont);
@@ -257,7 +258,7 @@ namespace Drahcir_Htiek
                 // Map Maker mode
                 _mapMaker.Draw(_spriteBatch, GraphicsDevice, Mouse.GetState(),
                               _Map.HorWallTexture, _Map.VertWallTexture, 
-                              _Map.CornerWallTexture, _chest.Texture);
+                              _Map.CornerWallTexture, _chest.Texture, _Map.DundgeonFloorTexture);
             }
             else
             {
