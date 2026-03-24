@@ -17,7 +17,7 @@ namespace Drahcir_Htiek.Test_map
 
         public Chests(int x, int y)
         {
-            Bounds = new Rectangle(x, y, 16, 16);
+            //Bounds = new Rectangle(x, y, 16, 16);
         }
 
         public void Draw(SpriteBatch spriteBatch /*Texture2D pixel*/)
