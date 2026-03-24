@@ -216,7 +216,7 @@ namespace Drahcir_Htiek.Logic
                             return bestSnapPos;
                         }
 
-                        int rightEdge = wall.Bounds.Right - 16;
+                        int rightEdge = wall.Bounds.Right - 1;
                         if (System.Math.Abs(worldPos.Y - belowWall) < snapDistance &&
                             System.Math.Abs(worldPos.X - rightEdge) < snapDistance)
                         {
@@ -237,7 +237,7 @@ namespace Drahcir_Htiek.Logic
                             return bestSnapPos;
                         }
                         
-                        int rightEdge = wall.Bounds.Right;
+                        int rightEdge = wall.Bounds.Right - 1;
                         if (System.Math.Abs(worldPos.X - rightEdge) < snapDistance &&
                             System.Math.Abs(worldPos.Y - wall.Bounds.Y) < snapDistance)
                         {
@@ -282,7 +282,7 @@ namespace Drahcir_Htiek.Logic
                             return bestSnapPos;
                         }
                         
-                        int rightEdge2 = wall.Bounds.Right;
+                        int rightEdge2 = wall.Bounds.Right - 1;
                         if (System.Math.Abs(worldPos.X - rightEdge2) < snapDistance &&
                             System.Math.Abs(worldPos.Y - wall.Bounds.Y) < snapDistance)
                         {
@@ -563,7 +563,7 @@ namespace Drahcir_Htiek.Logic
                                 Rectangle snapLine = new Rectangle(wall.Bounds.X - 10, belowWall, 36, 2);
                                 spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
                             }
-                            int rightEdge = wall.Bounds.Right - 16;
+                            int rightEdge = wall.Bounds.Right - 1;
                             if (System.Math.Abs(worldPos.Y - belowWall) < 64 &&
                                 System.Math.Abs(worldPos.X - rightEdge) < 64)
                             {
@@ -584,7 +584,7 @@ namespace Drahcir_Htiek.Logic
                                 spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
                             }
                             
-                            int rightEdge = wall.Bounds.Right;
+                            int rightEdge = wall.Bounds.Right - 1;
                             if (System.Math.Abs(worldPos.X - rightEdge) < 64 &&
                                 System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
                             {
@@ -627,7 +627,7 @@ namespace Drahcir_Htiek.Logic
                                 spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
                             }
                             
-                            int rightEdge2 = wall.Bounds.Right;
+                            int rightEdge2 = wall.Bounds.Right - 1;
                             if (System.Math.Abs(worldPos.X - rightEdge2) < 64 &&
                                 System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
                             {
