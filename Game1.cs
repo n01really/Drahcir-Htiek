@@ -28,6 +28,8 @@ namespace Drahcir_Htiek
         private bool _inMapMaker = false;
         private Map_Maker _mapMaker;
 
+        private KeyboardState _previousKeyState;
+
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -84,7 +86,10 @@ namespace Drahcir_Htiek
 
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            KeyboardState currentKeyState = Keyboard.GetState();
+
+            if ((GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || 
+                (currentKeyState.IsKeyDown(Keys.Escape) && !_previousKeyState.IsKeyDown(Keys.Escape))))
             {
                 // Escape tar dig tillbaka till menyn från map maker eller spelet
                 if (_inMapMaker || !_inMenu)
@@ -98,6 +103,8 @@ namespace Drahcir_Htiek
                     Exit();
                 }
             }
+
+            _previousKeyState = currentKeyState;
 
             if (_inMenu)
             {
