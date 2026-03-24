@@ -1,9 +1,12 @@
+
 using System.Collections.Generic;
 using System.Linq;
 using Drahcir_Htiek.Test_map;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.IO;
+using System.Text.Json;
 
 namespace Drahcir_Htiek.Logic
 {
@@ -97,6 +100,24 @@ namespace Drahcir_Htiek.Logic
             {
                 _camera.Reset();
                 System.Diagnostics.Debug.WriteLine("Camera reset");
+            }
+
+            // Spara karta med Ctrl+S
+            if (currentKeyState.IsKeyDown(Keys.LeftControl) &&
+                currentKeyState.IsKeyDown(Keys.S) &&
+                !_previousKeyState.IsKeyDown(Keys.S))
+            {
+                SaveMap("my_map");
+                System.Diagnostics.Debug.WriteLine("Map saved!");
+            }
+
+            // Ladda karta med Ctrl+L
+            if (currentKeyState.IsKeyDown(Keys.LeftControl) &&
+                currentKeyState.IsKeyDown(Keys.L) &&
+                !_previousKeyState.IsKeyDown(Keys.L))
+            {
+                LoadMap("my_map");
+                System.Diagnostics.Debug.WriteLine("Map loaded!");
             }
 
             if (currentMouseState.LeftButton == ButtonState.Pressed && 
@@ -691,6 +712,7 @@ namespace Drahcir_Htiek.Logic
                 "Tools:",
                 "1: Horizontal Wall | 2: Vertical Wall | 3: Corner Wall",
                 "4: Door | 5: Player Start | 6: Chest",
+                "Ctrl+S: Save Map | Ctrl+L: Load Map",
                 "",
                 $"Objects: Walls={HorWalls.Count + VertWalls.Count + CornerWalls.Count}, Chests={Chests.Count}",
                 $"Camera: X={_camera.Position.X:F0}, Y={_camera.Position.Y:F0}"
@@ -717,5 +739,125 @@ namespace Drahcir_Htiek.Logic
                 position.Y += lineHeight;
             }
         }
+
+        public void SaveMap(string filename)
+        {
+            var mapData = new MapData
+            {
+                PlayerStartPosition = PlayerStartPosition
+            };
+
+            foreach (var wall in HorWalls)
+            {
+                mapData.HorWalls.Add(new WallData
+                {
+                    X = wall.Bounds.X,
+                    Y = wall.Bounds.Y,
+                    Layer = wall.Layer
+                });
+            }
+
+            foreach (var wall in VertWalls)
+            {
+                mapData.VertWalls.Add(new WallData
+                {
+                    X = wall.Bounds.X,
+                    Y = wall.Bounds.Y,
+                    Layer = wall.Layer
+                });
+            }
+
+            foreach (var wall in CornerWalls)
+            {
+                mapData.CornerWalls.Add(new WallData
+                {
+                    X = wall.Bounds.X,
+                    Y = wall.Bounds.Y,
+                    Layer = wall.Layer
+                });
+            }
+
+            foreach (var door in Doors)
+            {
+                mapData.Doors.Add(new WallData
+                {
+                    X = door.Bounds.X,
+                    Y = door.Bounds.Y,
+                    Layer = door.Layer
+                });
+            }
+
+            foreach (var chest in Chests)
+            {
+                mapData.Chests.Add(new ChestData
+                {
+                    X = chest.Bounds.X,
+                    Y = chest.Bounds.Y
+                });
+            }
+
+            string mapsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Maps");
+            if (!Directory.Exists(mapsFolder))
+            {
+                Directory.CreateDirectory(mapsFolder);
+            }
+
+            string filepath = Path.Combine(mapsFolder, filename + ".json");
+            string jsonString = JsonSerializer.Serialize(mapData, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(filepath, jsonString);
+
+            System.Diagnostics.Debug.WriteLine($"Map saved to: {filepath}");
+        }
+
+        public void LoadMap(string filename)
+        {
+            string filepath = Path.Combine(Directory.GetCurrentDirectory(), "Maps", filename + ".json");
+            
+            if (!File.Exists(filepath))
+            {
+                System.Diagnostics.Debug.WriteLine($"Map file not found: {filepath}");
+                return;
+            }
+
+            string jsonString = File.ReadAllText(filepath);
+            var mapData = JsonSerializer.Deserialize<MapData>(jsonString);
+
+            HorWalls.Clear();
+            VertWalls.Clear();
+            CornerWalls.Clear();
+            Doors.Clear();
+            Chests.Clear();
+
+            foreach (var wallData in mapData.HorWalls)
+            {
+                HorWalls.Add(new Test_map.Hor_Wall(wallData.X, wallData.Y, wallData.Layer));
+            }
+
+            foreach (var wallData in mapData.VertWalls)
+            {
+                VertWalls.Add(new Test_map.Vert_Wall(wallData.X, wallData.Y, wallData.Layer));
+            }
+
+            foreach (var wallData in mapData.CornerWalls)
+            {
+                CornerWalls.Add(new Test_map.Corner_Wall(wallData.X, wallData.Y, wallData.Layer));
+            }
+
+            foreach (var wallData in mapData.Doors)
+            {
+                Doors.Add(new Test_map.Door(wallData.X, wallData.Y, wallData.Layer));
+            }
+
+            foreach (var chestData in mapData.Chests)
+            {
+                Chests.Add(new Test_map.Test_Chest(chestData.X, chestData.Y));
+            }
+
+            PlayerStartPosition = mapData.PlayerStartPosition;
+
+            System.Diagnostics.Debug.WriteLine($"Map loaded from: {filepath}");
+        }
+
+ 
     }
 }
