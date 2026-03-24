@@ -12,7 +12,7 @@ namespace Drahcir_Htiek.Camera
         public Matrix Transform { get; private set; }
 
         private float _minZoom = 0.5f;
-        private float _maxZoom = 5.0f;
+        private float _maxZoom = 10.0f;
         private float _zoomSpeed = 0.15f;
         private int _previousScrollValue;
 

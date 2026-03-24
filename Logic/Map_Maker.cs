@@ -42,9 +42,13 @@ namespace Drahcir_Htiek.Logic
         private int _gridSize = 16;
         private bool _smartSnapping = true;
         private Camera.Map_Maker_Camera _camera;
-        
+
         private Save_Map_Menu _saveMapMenu;
         private bool _lastActionWasSave = false;
+
+        // Konstanter för väggstorlekar
+        private const int DefaultHeight = 48;
+        private const int DefaultThickness = 16;
 
         public Map_Maker()
         {
@@ -83,11 +87,11 @@ namespace Drahcir_Htiek.Logic
             if (_saveMapMenu.IsActive)
             {
                 _saveMapMenu.Update();
-                
+
                 if (_saveMapMenu.MapSelected)
                 {
                     string mapName = _saveMapMenu.SelectedMapName;
-                    
+
                     if (_lastActionWasSave)
                     {
                         SaveMap(mapName);
@@ -98,10 +102,10 @@ namespace Drahcir_Htiek.Logic
                         LoadMap(mapName);
                         System.Diagnostics.Debug.WriteLine($"Map loaded: {mapName}");
                     }
-                    
+
                     _saveMapMenu.Close();
                 }
-                
+
                 _previousKeyState = currentKeyState;
                 _previousMouseState = currentMouseState;
                 return; // Avsluta Update tidigt
@@ -138,8 +142,8 @@ namespace Drahcir_Htiek.Logic
             }
 
             // Visa save-meny med Ctrl+S
-            if (currentKeyState.IsKeyDown(Keys.LeftControl) && 
-                currentKeyState.IsKeyDown(Keys.S) && 
+            if (currentKeyState.IsKeyDown(Keys.LeftControl) &&
+                currentKeyState.IsKeyDown(Keys.S) &&
                 !_previousKeyState.IsKeyDown(Keys.S))
             {
                 _saveMapMenu.ShowSaveMenu();
@@ -147,23 +151,23 @@ namespace Drahcir_Htiek.Logic
             }
 
             // Visa load-meny med Ctrl+L
-            if (currentKeyState.IsKeyDown(Keys.LeftControl) && 
-                currentKeyState.IsKeyDown(Keys.L) && 
+            if (currentKeyState.IsKeyDown(Keys.LeftControl) &&
+                currentKeyState.IsKeyDown(Keys.L) &&
                 !_previousKeyState.IsKeyDown(Keys.L))
             {
                 _saveMapMenu.ShowLoadMenu();
                 _lastActionWasSave = false;
             }
 
-            if (currentMouseState.LeftButton == ButtonState.Pressed && 
-                _previousMouseState.LeftButton == ButtonState.Released && 
-                !_camera.IsDragging && 
+            if (currentMouseState.LeftButton == ButtonState.Pressed &&
+                _previousMouseState.LeftButton == ButtonState.Released &&
+                !_camera.IsDragging &&
                 !currentKeyState.IsKeyDown(Keys.Space))
             {
                 PlaceObject(currentMouseState);
             }
 
-            if (currentMouseState.RightButton == ButtonState.Pressed && 
+            if (currentMouseState.RightButton == ButtonState.Pressed &&
                 _previousMouseState.RightButton == ButtonState.Released)
             {
                 RemoveObject(currentMouseState);
@@ -187,190 +191,460 @@ namespace Drahcir_Htiek.Logic
                 ((int)worldPos.X / _gridSize) * _gridSize,
                 ((int)worldPos.Y / _gridSize) * _gridSize
             );
+            float closestDistance = float.MaxValue;
 
             switch (tool)
             {
                 case EditorTool.HorizontalWall:
-                    // Snappa till HÖGER eller VÄNSTER om HorWalls
+                    // Snappa till alla HorWalls (höger och vänster kant)
                     foreach (var wall in HorWalls)
                     {
+                        // Höger kant
                         int rightEdge = wall.Bounds.Right - 1;
-                        if (System.Math.Abs(worldPos.X - rightEdge) < snapDistance &&
-                            System.Math.Abs(worldPos.Y - wall.Bounds.Y) < snapDistance)
+                        float distRight = Vector2.Distance(worldPos, new Vector2(rightEdge, wall.Bounds.Y));
+                        if (distRight < snapDistance && distRight < closestDistance)
                         {
                             bestSnapPos = new Vector2(rightEdge, wall.Bounds.Y);
-                            return bestSnapPos;
+                            closestDistance = distRight;
                         }
-                        
+
+                        // Vänster kant
                         int leftEdge = wall.Bounds.X - 47;
-                        if (System.Math.Abs(worldPos.X - leftEdge) < snapDistance &&
-                            System.Math.Abs(worldPos.Y - wall.Bounds.Y) < snapDistance)
+                        float distLeft = Vector2.Distance(worldPos, new Vector2(leftEdge, wall.Bounds.Y));
+                        if (distLeft < snapDistance && distLeft < closestDistance)
                         {
                             bestSnapPos = new Vector2(leftEdge, wall.Bounds.Y);
-                            return bestSnapPos;
+                            closestDistance = distLeft;
                         }
                     }
 
-                    // Snappa till HÖGER eller VÄNSTER om CornerWalls
+                    // Snappa till alla CornerWalls (alla fyra kanter)
                     foreach (var wall in CornerWalls)
                     {
+                        // Höger kant, samma Y
                         int rightEdge = wall.Bounds.Right - 1;
-                        if (System.Math.Abs(worldPos.X - rightEdge) < snapDistance &&
-                            System.Math.Abs(worldPos.Y - wall.Bounds.Y) < snapDistance)
+                        float distRight = Vector2.Distance(worldPos, new Vector2(rightEdge, wall.Bounds.Y));
+                        if (distRight < snapDistance && distRight < closestDistance)
                         {
                             bestSnapPos = new Vector2(rightEdge, wall.Bounds.Y);
-                            return bestSnapPos;
+                            closestDistance = distRight;
                         }
 
-                        if (System.Math.Abs(worldPos.Y - wall.Bounds.Bottom) < snapDistance &&
-                            System.Math.Abs(worldPos.X - rightEdge) < snapDistance)
+                        // Höger kant, nedre Y
+                        float distRightBottom = Vector2.Distance(worldPos, new Vector2(rightEdge, wall.Bounds.Bottom));
+                        if (distRightBottom < snapDistance && distRightBottom < closestDistance)
                         {
                             bestSnapPos = new Vector2(rightEdge, wall.Bounds.Bottom);
-                            return bestSnapPos;
+                            closestDistance = distRightBottom;
                         }
-                        
+
+                        // Vänster kant, samma Y
                         int leftEdge = wall.Bounds.X - 47;
-                        if (System.Math.Abs(worldPos.X - leftEdge) < snapDistance &&
-                            System.Math.Abs(worldPos.Y - wall.Bounds.Y) < snapDistance)
+                        float distLeft = Vector2.Distance(worldPos, new Vector2(leftEdge, wall.Bounds.Y));
+                        if (distLeft < snapDistance && distLeft < closestDistance)
                         {
                             bestSnapPos = new Vector2(leftEdge, wall.Bounds.Y);
-                            return bestSnapPos;
+                            closestDistance = distLeft;
+                        }
+
+                        // Vänster kant, nedre Y
+                        float distLeftBottom = Vector2.Distance(worldPos, new Vector2(leftEdge, wall.Bounds.Bottom));
+                        if (distLeftBottom < snapDistance && distLeftBottom < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(leftEdge, wall.Bounds.Bottom);
+                            closestDistance = distLeftBottom;
                         }
                     }
 
-                    // Snappa till HÖGER eller VÄNSTER om VertWalls
+                    // Snappa till alla VertWalls (topp och botten)
                     foreach (var wall in VertWalls)
                     {
+                        // Höger kant, övre Y
                         int rightEdge = wall.Bounds.Right - 1;
-                        if (System.Math.Abs(worldPos.X - rightEdge) < snapDistance &&
-                            System.Math.Abs(worldPos.Y - wall.Bounds.Y) < snapDistance)
+                        float distRight = Vector2.Distance(worldPos, new Vector2(rightEdge, wall.Bounds.Y));
+                        if (distRight < snapDistance && distRight < closestDistance)
                         {
                             bestSnapPos = new Vector2(rightEdge, wall.Bounds.Y);
-                            return bestSnapPos;
+                            closestDistance = distRight;
                         }
 
-                        if (System.Math.Abs(worldPos.Y - wall.Bounds.Bottom) < snapDistance &&
-                            System.Math.Abs(worldPos.X - rightEdge) < snapDistance)
+                        // Höger kant, nedre Y
+                        float distRightBottom = Vector2.Distance(worldPos, new Vector2(rightEdge, wall.Bounds.Bottom));
+                        if (distRightBottom < snapDistance && distRightBottom < closestDistance)
                         {
                             bestSnapPos = new Vector2(rightEdge, wall.Bounds.Bottom);
-                            return bestSnapPos;
+                            closestDistance = distRightBottom;
                         }
-                        
+
+                        // Vänster kant, övre Y
                         int leftEdge = wall.Bounds.X - 47;
-                        if (System.Math.Abs(worldPos.X - leftEdge) < snapDistance &&
-                            System.Math.Abs(worldPos.Y - wall.Bounds.Y) < snapDistance)
+                        float distLeft = Vector2.Distance(worldPos, new Vector2(leftEdge, wall.Bounds.Y));
+                        if (distLeft < snapDistance && distLeft < closestDistance)
                         {
                             bestSnapPos = new Vector2(leftEdge, wall.Bounds.Y);
-                            return bestSnapPos;
+                            closestDistance = distLeft;
+                        }
+
+                        // Vänster kant, nedre Y
+                        float distLeftBottom = Vector2.Distance(worldPos, new Vector2(leftEdge, wall.Bounds.Bottom));
+                        if (distLeftBottom < snapDistance && distLeftBottom < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(leftEdge, wall.Bounds.Bottom);
+                            closestDistance = distLeftBottom;
                         }
                     }
                     break;
 
                 case EditorTool.VerticalWall:
+                    // Snappa till alla CornerWalls (topp och botten)
                     foreach (var wall in CornerWalls)
                     {
-                        int belowCorner = wall.Bounds.Y + 11;
-                        if (System.Math.Abs(worldPos.Y - belowCorner) < snapDistance &&
-                            System.Math.Abs(worldPos.X - wall.Bounds.X) < snapDistance)
+                        // Ovanpå corner wall - kompensera för vertical walls visuella offset (37 pixlar upp)
+                        float distSamePos = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, wall.Bounds.Y - 37));
+                        if (distSamePos < snapDistance && distSamePos < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(wall.Bounds.X, wall.Bounds.Y - 37);
+                            closestDistance = distSamePos;
+                        }
+
+                        // Under corner (direkt under hela corner wall)
+                        int belowCorner = wall.Bounds.Bottom;
+                        float distBelow = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, belowCorner));
+                        if (distBelow < snapDistance && distBelow < closestDistance)
                         {
                             bestSnapPos = new Vector2(wall.Bounds.X, belowCorner);
-                            return bestSnapPos;
+                            closestDistance = distBelow;
+                        }
+
+                        // Över corner (direkt över hela corner wall)
+                        int aboveCorner = wall.Bounds.Y - DefaultHeight;
+                        float distAbove = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, aboveCorner));
+                        if (distAbove < snapDistance && distAbove < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(wall.Bounds.X, aboveCorner);
+                            closestDistance = distAbove;
+                        }
+
+                        // Till höger av corner, kompensera för visuell offset (37 pixlar upp)
+                        int rightX = wall.Bounds.Right;
+                        float distRightSame = Vector2.Distance(worldPos, new Vector2(rightX, wall.Bounds.Y - 37));
+                        if (distRightSame < snapDistance && distRightSame < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(rightX, wall.Bounds.Y - 37);
+                            closestDistance = distRightSame;
+                        }
+
+                        // Till höger av corner, under (bredvid till höger, under)
+                        float distRightBelow = Vector2.Distance(worldPos, new Vector2(rightX, belowCorner));
+                        if (distRightBelow < snapDistance && distRightBelow < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(rightX, belowCorner);
+                            closestDistance = distRightBelow;
+                        }
+
+                        // Till höger av corner, över (bredvid till höger, över)
+                        float distRightAbove = Vector2.Distance(worldPos, new Vector2(rightX, aboveCorner));
+                        if (distRightAbove < snapDistance && distRightAbove < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(rightX, aboveCorner);
+                            closestDistance = distRightAbove;
+                        }
+
+                        // Till vänster av corner, kompensera för visuell offset (37 pixlar upp)
+                        int leftX = wall.Bounds.X - DefaultThickness;
+                        float distLeftSame = Vector2.Distance(worldPos, new Vector2(leftX, wall.Bounds.Y - 37));
+                        if (distLeftSame < snapDistance && distLeftSame < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(leftX, wall.Bounds.Y - 37);
+                            closestDistance = distLeftSame;
+                        }
+
+                        // Till vänster av corner, under (bredvid till vänster, under)
+                        float distLeftBelow = Vector2.Distance(worldPos, new Vector2(leftX, belowCorner));
+                        if (distLeftBelow < snapDistance && distLeftBelow < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(leftX, belowCorner);
+                            closestDistance = distLeftBelow;
+                        }
+
+                        // Till vänster av corner, över (bredvid till vänster, över)
+                        float distLeftAbove = Vector2.Distance(worldPos, new Vector2(leftX, aboveCorner));
+                        if (distLeftAbove < snapDistance && distLeftAbove < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(leftX, aboveCorner);
+                            closestDistance = distLeftAbove;
                         }
                     }
 
+                    // Snappa till alla VertWalls (topp och botten)
                     foreach (var wall in VertWalls)
                     {
-                        int belowWall = wall.Bounds.Bottom - 11;
-                        if (System.Math.Abs(worldPos.Y - belowWall) < snapDistance &&
-                            System.Math.Abs(worldPos.X - wall.Bounds.X) < snapDistance)
+                        // Exakt samma position (överlappande)
+                        float distSamePos = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, wall.Bounds.Y));
+                        if (distSamePos < snapDistance && distSamePos < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(wall.Bounds.X, wall.Bounds.Y);
+                            closestDistance = distSamePos;
+                        }
+
+                        // Under wall (direkt efter)
+                        int belowWall = wall.Bounds.Bottom;
+                        float distBelow = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, belowWall));
+                        if (distBelow < snapDistance && distBelow < closestDistance)
                         {
                             bestSnapPos = new Vector2(wall.Bounds.X, belowWall);
-                            return bestSnapPos;
+                            closestDistance = distBelow;
+                        }
+
+                        // Över wall (direkt innan)
+                        int aboveWall = wall.Bounds.Y - DefaultHeight;
+                        float distAbove = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, aboveWall));
+                        if (distAbove < snapDistance && distAbove < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(wall.Bounds.X, aboveWall);
+                            closestDistance = distAbove;
+                        }
+
+                        // Till höger av wall, samma Y
+                        int rightX = wall.Bounds.Right;
+                        float distRightSame = Vector2.Distance(worldPos, new Vector2(rightX, wall.Bounds.Y));
+                        if (distRightSame < snapDistance && distRightSame < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(rightX, wall.Bounds.Y);
+                            closestDistance = distRightSame;
+                        }
+
+                        // Till höger av wall, under
+                        float distRightBelow = Vector2.Distance(worldPos, new Vector2(rightX, belowWall));
+                        if (distRightBelow < snapDistance && distRightBelow < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(rightX, belowWall);
+                            closestDistance = distRightBelow;
+                        }
+
+                        // Till höger av wall, över
+                        float distRightAbove = Vector2.Distance(worldPos, new Vector2(rightX, aboveWall));
+                        if (distRightAbove < snapDistance && distRightAbove < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(rightX, aboveWall);
+                            closestDistance = distRightAbove;
+                        }
+
+                        // Till vänster av wall, samma Y
+                        int leftX = wall.Bounds.X - DefaultThickness;
+                        float distLeftSame = Vector2.Distance(worldPos, new Vector2(leftX, wall.Bounds.Y));
+                        if (distLeftSame < snapDistance && distLeftSame < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(leftX, wall.Bounds.Y);
+                            closestDistance = distLeftSame;
+                        }
+
+                        // Till vänster av wall, under
+                        float distLeftBelow = Vector2.Distance(worldPos, new Vector2(leftX, belowWall));
+                        if (distLeftBelow < snapDistance && distLeftBelow < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(leftX, belowWall);
+                            closestDistance = distLeftBelow;
+                        }
+
+                        // Till vänster av wall, över
+                        float distLeftAbove = Vector2.Distance(worldPos, new Vector2(leftX, aboveWall));
+                        if (distLeftAbove < snapDistance && distLeftAbove < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(leftX, aboveWall);
+                            closestDistance = distLeftAbove;
                         }
                     }
 
+                    // Snappa till alla HorWalls (alla fyra hörn/kanter)
                     foreach (var wall in HorWalls)
                     {
-                        int belowWall = wall.Bounds.Y + 11;
-                        if (System.Math.Abs(worldPos.Y - belowWall) < snapDistance &&
-                            System.Math.Abs(worldPos.X - wall.Bounds.X) < snapDistance)
+                        // Under wall, vänster kant
+                        int belowWall = wall.Bounds.Bottom;
+                        float distLeft = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, belowWall));
+                        if (distLeft < snapDistance && distLeft < closestDistance)
                         {
                             bestSnapPos = new Vector2(wall.Bounds.X, belowWall);
-                            return bestSnapPos;
+                            closestDistance = distLeft;
                         }
 
-                        int rightEdge = wall.Bounds.Right - 16;
-                        if (System.Math.Abs(worldPos.Y - belowWall) < snapDistance &&
-                            System.Math.Abs(worldPos.X - rightEdge) < snapDistance)
+                        // Under wall, höger kant
+                        int rightX = wall.Bounds.Right - DefaultThickness;
+                        float distRight = Vector2.Distance(worldPos, new Vector2(rightX, belowWall));
+                        if (distRight < snapDistance && distRight < closestDistance)
                         {
-                            bestSnapPos = new Vector2(rightEdge, belowWall);
-                            return bestSnapPos;
+                            bestSnapPos = new Vector2(rightX, belowWall);
+                            closestDistance = distRight;
+                        }
+
+                        // Över wall, vänster kant
+                        int aboveWall = wall.Bounds.Y - DefaultHeight;
+                        float distLeftAbove = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, aboveWall));
+                        if (distLeftAbove < snapDistance && distLeftAbove < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(wall.Bounds.X, aboveWall);
+                            closestDistance = distLeftAbove;
+                        }
+
+                        // Över wall, höger kant
+                        float distRightAbove = Vector2.Distance(worldPos, new Vector2(rightX, aboveWall));
+                        if (distRightAbove < snapDistance && distRightAbove < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(rightX, aboveWall);
+                            closestDistance = distRightAbove;
                         }
                     }
                     break;
 
                 case EditorTool.CornerWall:
+                    // Snappa till alla HorWalls (alla fyra kanter)
                     foreach (var wall in HorWalls)
                     {
+                        // Vänster kant, samma Y
                         int leftEdge = wall.Bounds.X - 15;
-                        if (System.Math.Abs(worldPos.X - leftEdge) < snapDistance &&
-                            System.Math.Abs(worldPos.Y - wall.Bounds.Y) < snapDistance)
+                        float distLeft = Vector2.Distance(worldPos, new Vector2(leftEdge, wall.Bounds.Y));
+                        if (distLeft < snapDistance && distLeft < closestDistance)
                         {
                             bestSnapPos = new Vector2(leftEdge, wall.Bounds.Y);
-                            return bestSnapPos;
+                            closestDistance = distLeft;
                         }
-                        
+
+                        // Höger kant, samma Y
                         int rightEdge = wall.Bounds.Right - 1;
-                        if (System.Math.Abs(worldPos.X - rightEdge) < snapDistance &&
-                            System.Math.Abs(worldPos.Y - wall.Bounds.Y) < snapDistance)
+                        float distRight = Vector2.Distance(worldPos, new Vector2(rightEdge, wall.Bounds.Y));
+                        if (distRight < snapDistance && distRight < closestDistance)
                         {
                             bestSnapPos = new Vector2(rightEdge, wall.Bounds.Y);
-                            return bestSnapPos;
+                            closestDistance = distRight;
                         }
-                        
-                        if (System.Math.Abs(worldPos.Y - wall.Bounds.Bottom) < snapDistance &&
-                            System.Math.Abs(worldPos.X - rightEdge) < snapDistance)
+
+                        // Höger kant, nedre Y
+                        float distRightBottom = Vector2.Distance(worldPos, new Vector2(rightEdge, wall.Bounds.Bottom));
+                        if (distRightBottom < snapDistance && distRightBottom < closestDistance)
                         {
                             bestSnapPos = new Vector2(rightEdge, wall.Bounds.Bottom);
-                            return bestSnapPos;
+                            closestDistance = distRightBottom;
                         }
-                        
+
+                        // Vänster kant, nedre Y
                         int leftEdge2 = wall.Bounds.X - 16;
-                        if (System.Math.Abs(worldPos.Y - wall.Bounds.Bottom) < snapDistance &&
-                            System.Math.Abs(worldPos.X - leftEdge2) < snapDistance)
+                        float distLeftBottom = Vector2.Distance(worldPos, new Vector2(leftEdge2, wall.Bounds.Bottom));
+                        if (distLeftBottom < snapDistance && distLeftBottom < closestDistance)
                         {
                             bestSnapPos = new Vector2(leftEdge2, wall.Bounds.Bottom);
-                            return bestSnapPos;
+                            closestDistance = distLeftBottom;
+                        }
+
+                        // Övre Y, vänster kant
+                        int aboveWall = wall.Bounds.Y - 11;
+                        float distLeftTop = Vector2.Distance(worldPos, new Vector2(leftEdge, aboveWall));
+                        if (distLeftTop < snapDistance && distLeftTop < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(leftEdge, aboveWall);
+                            closestDistance = distLeftTop;
+                        }
+
+                        // Övre Y, höger kant
+                        float distRightTop = Vector2.Distance(worldPos, new Vector2(rightEdge, aboveWall));
+                        if (distRightTop < snapDistance && distRightTop < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(rightEdge, aboveWall);
+                            closestDistance = distRightTop;
                         }
                     }
-                    
+
+                    // Snappa till alla VertWalls (topp och botten, vänster och höger)
                     foreach (var wall in VertWalls)
                     {
+                        // Under wall
                         int belowWall = wall.Bounds.Bottom - 11;
-                        if (System.Math.Abs(worldPos.Y - belowWall) < snapDistance &&
-                            System.Math.Abs(worldPos.X - wall.Bounds.X) < snapDistance)
+                        float distBelow = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, belowWall));
+                        if (distBelow < snapDistance && distBelow < closestDistance)
                         {
                             bestSnapPos = new Vector2(wall.Bounds.X, belowWall);
-                            return bestSnapPos;
+                            closestDistance = distBelow;
+                        }
+
+                        // Över wall
+                        int aboveWall = wall.Bounds.Y - 11;
+                        float distAbove = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, aboveWall));
+                        if (distAbove < snapDistance && distAbove < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(wall.Bounds.X, aboveWall);
+                            closestDistance = distAbove;
+                        }
+
+                        // Höger sida, under
+                        int rightEdge = wall.Bounds.Right - 1;
+                        float distRightBelow = Vector2.Distance(worldPos, new Vector2(rightEdge, belowWall));
+                        if (distRightBelow < snapDistance && distRightBelow < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(rightEdge, belowWall);
+                            closestDistance = distRightBelow;
+                        }
+
+                        // Höger sida, över
+                        float distRightAbove = Vector2.Distance(worldPos, new Vector2(rightEdge, aboveWall));
+                        if (distRightAbove < snapDistance && distRightAbove < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(rightEdge, aboveWall);
+                            closestDistance = distRightAbove;
                         }
                     }
-                    
+
+                    // Snappa till alla CornerWalls (alla fyra kanter)
                     foreach (var wall in CornerWalls)
                     {
+                        // Under corner
                         int belowCorner = wall.Bounds.Bottom - 11;
-                        if (System.Math.Abs(worldPos.Y - belowCorner) < snapDistance &&
-                            System.Math.Abs(worldPos.X - wall.Bounds.X) < snapDistance)
+                        float distBelow = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, belowCorner));
+                        if (distBelow < snapDistance && distBelow < closestDistance)
                         {
                             bestSnapPos = new Vector2(wall.Bounds.X, belowCorner);
-                            return bestSnapPos;
+                            closestDistance = distBelow;
                         }
-                        
+
+                        // Över corner
+                        int aboveCorner = wall.Bounds.Y - 11;
+                        float distAbove = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, aboveCorner));
+                        if (distAbove < snapDistance && distAbove < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(wall.Bounds.X, aboveCorner);
+                            closestDistance = distAbove;
+                        }
+
+                        // Höger kant, samma Y
                         int rightEdge2 = wall.Bounds.Right - 1;
-                        if (System.Math.Abs(worldPos.X - rightEdge2) < snapDistance &&
-                            System.Math.Abs(worldPos.Y - wall.Bounds.Y) < snapDistance)
+                        float distRight = Vector2.Distance(worldPos, new Vector2(rightEdge2, wall.Bounds.Y));
+                        if (distRight < snapDistance && distRight < closestDistance)
                         {
                             bestSnapPos = new Vector2(rightEdge2, wall.Bounds.Y);
-                            return bestSnapPos;
+                            closestDistance = distRight;
+                        }
+
+                        // Höger kant, nedre Y
+                        float distRightBottom = Vector2.Distance(worldPos, new Vector2(rightEdge2, wall.Bounds.Bottom));
+                        if (distRightBottom < snapDistance && distRightBottom < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(rightEdge2, wall.Bounds.Bottom);
+                            closestDistance = distRightBottom;
+                        }
+
+                        // Vänster kant, samma Y
+                        int leftEdge = wall.Bounds.X - 15;
+                        float distLeft = Vector2.Distance(worldPos, new Vector2(leftEdge, wall.Bounds.Y));
+                        if (distLeft < snapDistance && distLeft < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(leftEdge, wall.Bounds.Y);
+                            closestDistance = distLeft;
+                        }
+
+                        // Vänster kant, nedre Y
+                        float distLeftBottom = Vector2.Distance(worldPos, new Vector2(leftEdge, wall.Bounds.Bottom));
+                        if (distLeftBottom < snapDistance && distLeftBottom < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(leftEdge, wall.Bounds.Bottom);
+                            closestDistance = distLeftBottom;
                         }
                     }
                     break;
@@ -439,8 +713,8 @@ namespace Drahcir_Htiek.Logic
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, GraphicsDevice graphicsDevice, MouseState mouseState, 
-                        Texture2D horWallTexture, Texture2D vertWallTexture, Texture2D cornerWallTexture, 
+        public void Draw(SpriteBatch spriteBatch, GraphicsDevice graphicsDevice, MouseState mouseState,
+                        Texture2D horWallTexture, Texture2D vertWallTexture, Texture2D cornerWallTexture,
                         Texture2D chestTexture)
         {
             spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _camera.Transform);
@@ -452,58 +726,63 @@ namespace Drahcir_Htiek.Logic
             foreach (var wall in HorWalls)
             {
                 var wallToCapture = wall;
-                drawableObjects.Add((wallToCapture.Layer, () => 
+                drawableObjects.Add((wallToCapture.Layer, () =>
                 {
                     if (horWallTexture != null)
                         spriteBatch.Draw(horWallTexture, wallToCapture.Bounds, Color.White);
                     else
                         spriteBatch.Draw(_pixel, wallToCapture.Bounds, Color.Gray);
-                }));
+                }
+                ));
             }
 
             foreach (var wall in VertWalls)
             {
                 var wallToCapture = wall;
-                drawableObjects.Add((wallToCapture.Layer, () => 
+                drawableObjects.Add((wallToCapture.Layer, () =>
                 {
                     if (vertWallTexture != null)
                         spriteBatch.Draw(vertWallTexture, wallToCapture.Bounds, Color.White);
                     else
                         spriteBatch.Draw(_pixel, wallToCapture.Bounds, Color.Red);
-                }));
+                }
+                ));
             }
 
             foreach (var wall in CornerWalls)
             {
                 var wallToCapture = wall;
-                drawableObjects.Add((wallToCapture.Layer, () => 
+                drawableObjects.Add((wallToCapture.Layer, () =>
                 {
                     if (cornerWallTexture != null)
                         spriteBatch.Draw(cornerWallTexture, wallToCapture.Bounds, Color.White);
                     else
                         spriteBatch.Draw(_pixel, wallToCapture.Bounds, Color.DarkRed);
-                }));
+                }
+                ));
             }
 
             foreach (var door in Doors)
             {
                 var doorToCapture = door;
-                drawableObjects.Add((doorToCapture.Layer, () => 
+                drawableObjects.Add((doorToCapture.Layer, () =>
                 {
                     spriteBatch.Draw(_pixel, doorToCapture.Bounds, Color.Brown);
-                }));
+                }
+                ));
             }
 
             foreach (var chest in Chests)
             {
                 var chestToCapture = chest;
-                drawableObjects.Add((0, () => 
+                drawableObjects.Add((0, () =>
                 {
                     if (chestTexture != null)
                         spriteBatch.Draw(chestTexture, chestToCapture.Bounds, Color.White);
                     else
                         spriteBatch.Draw(_pixel, chestToCapture.Bounds, Color.Green);
-                }));
+                }
+                ));
             }
 
             var sortedObjects = drawableObjects.OrderBy(obj => obj.layer).ToList();
@@ -581,7 +860,7 @@ namespace Drahcir_Htiek.Logic
                                 Rectangle snapLine = new Rectangle(rightEdge, wall.Bounds.Y - 10, 2, 68);
                                 spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
                             }
-                            
+
                             int leftEdge = wall.Bounds.X - 47;
                             if (System.Math.Abs(worldPos.X - leftEdge) < 64 &&
                                 System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
@@ -605,7 +884,7 @@ namespace Drahcir_Htiek.Logic
                                 Rectangle snapLine = new Rectangle(rightEdge - 10, wall.Bounds.Bottom, 36, 2);
                                 spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
                             }
-                            
+
                             int leftEdge = wall.Bounds.X - 47;
                             if (System.Math.Abs(worldPos.X - leftEdge) < 64 &&
                                 System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
@@ -629,7 +908,7 @@ namespace Drahcir_Htiek.Logic
                                 Rectangle snapLine = new Rectangle(rightEdge - 10, wall.Bounds.Bottom, 36, 2);
                                 spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
                             }
-                            
+
                             int leftEdge = wall.Bounds.X - 47;
                             if (System.Math.Abs(worldPos.X - leftEdge) < 64 &&
                                 System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
@@ -690,7 +969,7 @@ namespace Drahcir_Htiek.Logic
                                 Rectangle snapLine = new Rectangle(leftEdge, wall.Bounds.Y - 10, 2, 68);
                                 spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
                             }
-                            
+
                             int rightEdge = wall.Bounds.Right - 1;
                             if (System.Math.Abs(worldPos.X - rightEdge) < 64 &&
                                 System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
@@ -698,14 +977,14 @@ namespace Drahcir_Htiek.Logic
                                 Rectangle snapLine = new Rectangle(rightEdge, wall.Bounds.Y - 10, 2, 68);
                                 spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
                             }
-                            
+
                             if (System.Math.Abs(worldPos.Y - wall.Bounds.Bottom) < 64 &&
                                 System.Math.Abs(worldPos.X - rightEdge) < 64)
                             {
                                 Rectangle snapLine = new Rectangle(rightEdge - 10, wall.Bounds.Bottom, 36, 2);
                                 spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
                             }
-                            
+
                             int leftEdge2 = wall.Bounds.X - 16;
                             if (System.Math.Abs(worldPos.Y - wall.Bounds.Bottom) < 64 &&
                                 System.Math.Abs(worldPos.X - leftEdge2) < 64)
@@ -733,7 +1012,7 @@ namespace Drahcir_Htiek.Logic
                                 Rectangle snapLine = new Rectangle(wall.Bounds.X - 10, belowCorner, 36, 2);
                                 spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
                             }
-                            
+
                             int rightEdge2 = wall.Bounds.Right - 1;
                             if (System.Math.Abs(worldPos.X - rightEdge2) < 64 &&
                                 System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
