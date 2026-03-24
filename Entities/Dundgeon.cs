@@ -88,7 +88,7 @@ namespace Drahcir_Htiek.Test_map
             Layer = layer;
         }
         
-        // Kollision baserad på HÖJD, inte bredd
+        // Kollision baserat på HÖJD, inte bredd
         public Rectangle GetCollisionBounds(Rectangle oldPlayerBounds)
         {
             // Kolla om spelaren är under eller över väggen
@@ -166,6 +166,7 @@ namespace Drahcir_Htiek.Test_map
         public List<Vert_Wall> VertWalls;
         public List<Corner_Wall> CornerWalls;
         public List<Door> Doors;
+        public List<Dundgeon_Floor> FloorTiles;
         public Texture2D HorWallTexture;
         public Texture2D VertWallTexture;
         public Texture2D CornerWallTexture;
@@ -178,6 +179,7 @@ namespace Drahcir_Htiek.Test_map
             VertWalls = new List<Vert_Wall>();
             CornerWalls = new List<Corner_Wall>();
             Doors = new List<Door>();
+            FloorTiles = new List<Dundgeon_Floor>();
 
             //// --- RUM 1 (Startrummet uppe till vänster) ---
             //HorWalls.Add(new Hor_Wall(15, 0, 1)); // Toppvägg
@@ -251,13 +253,25 @@ namespace Drahcir_Htiek.Test_map
 
         public void Draw(SpriteBatch spriteBatch)
         {
+            // Rita floor tiles först (under allt annat)
+            foreach (var floor in FloorTiles)
+            {
+                if (DundgeonFloorTexture != null)
+                {
+                    floor.Texture = DundgeonFloorTexture;
+                    floor.Draw(spriteBatch);
+                }
+            }
+
             // Sortera och rita i lager-ordning
             var allWalls = HorWalls
                 .Cast<object>()
                 .Concat(VertWalls.Cast<object>())
                 .Concat(CornerWalls.Cast<object>())
+                .Concat(Doors.Cast<object>())
                 .OrderBy(w => w is Hor_Wall hw ? hw.Layer : 
                               w is Vert_Wall vw ? vw.Layer : 
+                              w is Door d ? d.Layer :
                               ((Corner_Wall)w).Layer);
 
             foreach (var wall in allWalls)

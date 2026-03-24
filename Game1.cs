@@ -113,6 +113,21 @@ namespace Drahcir_Htiek
 
                 if (_mainMenu.StartGameClicked)
                 {
+                    // Ladda kartan och starta spelet
+                    Load_Map.LoadFromJson(_Map, "Dungeon_Floor_One");
+                    
+                    // Sätt spelarens position från kartan
+                    var playerStartPos = Load_Map.GetPlayerStartPosition("Dungeon_Floor_One");
+                    if (playerStartPos.HasValue)
+                    {
+                        _player.Bounds = new Rectangle(
+                            (int)playerStartPos.Value.X,
+                            (int)playerStartPos.Value.Y,
+                            _player.Bounds.Width,
+                            _player.Bounds.Height
+                        );
+                    }
+                    
                     _inMenu = false;
                     _inMapMaker = false;
                     _mainMenu.Reset();
@@ -262,8 +277,30 @@ namespace Drahcir_Htiek
             }
             else
             {
-                // Normal game drawing code would continue here...
-                // (Fortsätt med din befintliga Draw-kod för normalt spel)
+                // Normal game mode - rita spelet
+                _spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _camera.Transform);
+                
+                // Rita kartan
+                _Map.Draw(_spriteBatch);
+                
+                // Rita kistor
+                if (_chest != null && _chest.Texture != null)
+                {
+                    _spriteBatch.Draw(_chest.Texture, _chest.Bounds, Color.White);
+                }
+                
+                // Rita spelaren
+                _spriteBatch.Draw(_pixel, _player.Bounds, Color.Blue);
+                
+                _spriteBatch.End();
+
+                // Rita debug information (utan kamera transform)
+                if (_debugMode != null)
+                {
+                    _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
+                    //_debugMode.DrawPlayerPosition(_spriteBatch, _player.Bounds, _camera.Position);
+                    _spriteBatch.End();
+                }
             }
 
             base.Draw(gameTime);
