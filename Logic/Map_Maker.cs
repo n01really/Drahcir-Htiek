@@ -1,11 +1,12 @@
 
-using System.Collections.Generic;
-using System.Linq;
 using Drahcir_Htiek.Test_map;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 
 namespace Drahcir_Htiek.Logic
@@ -796,7 +797,8 @@ namespace Drahcir_Htiek.Logic
                 });
             }
 
-            string mapsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Maps");
+            string projectRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..");
+            string mapsFolder = Path.Combine(projectRoot, "Maps");
             if (!Directory.Exists(mapsFolder))
             {
                 Directory.CreateDirectory(mapsFolder);
@@ -811,8 +813,9 @@ namespace Drahcir_Htiek.Logic
 
         public void LoadMap(string filename)
         {
-            string filepath = Path.Combine(Directory.GetCurrentDirectory(), "Maps", filename + ".json");
-            
+            string projectRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..");
+            string filepath = Path.Combine(projectRoot, "Maps", filename + ".json");
+
             if (!File.Exists(filepath))
             {
                 System.Diagnostics.Debug.WriteLine($"Map file not found: {filepath}");
