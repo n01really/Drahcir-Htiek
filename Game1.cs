@@ -65,7 +65,7 @@ namespace Drahcir_Htiek
 
             _debugMode.SetPixelTexture(_pixel);
 
-            _player.Texture = Content.Load<Texture2D>("Female Skin1");
+            _player.Texture = Content.Load<Texture2D>("Test");
 
             _chest.Texture = Content.Load<Texture2D>("Chest");
             _Map.HorWallTexture = Content.Load<Texture2D>("Hori_Wall");
