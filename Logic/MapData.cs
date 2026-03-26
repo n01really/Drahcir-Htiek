@@ -10,6 +10,7 @@ namespace Drahcir_Htiek.Logic
         public List<WallData> CornerWalls { get; set; } = new List<WallData>();
         public List<WallData> Doors { get; set; } = new List<WallData>();
         public List<ChestData> Chests { get; set; } = new List<ChestData>();
+        public List<EnemyData> Enemies { get; set; } = new List<EnemyData>();
         public List<FloorTileData> FloorTiles { get; set; } = new List<FloorTileData>();
         public Vector2? PlayerStartPosition { get; set; }
     }
@@ -25,6 +26,13 @@ namespace Drahcir_Htiek.Logic
     {
         public int X { get; set; }
         public int Y { get; set; }
+    }
+
+    public class EnemyData
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+        public int Layer { get; set; }
     }
 
     public class FloorTileData

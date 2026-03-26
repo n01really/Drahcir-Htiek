@@ -8,6 +8,7 @@ using System.Text.Json;
 using System;
 using Drahcir_Htiek.Test_map;
 using Drahcir_Htiek.Menues;
+using Drahcir_Htiek.Entities;
 
 namespace Drahcir_Htiek.Logic
 {
@@ -19,6 +20,7 @@ namespace Drahcir_Htiek.Logic
         Door,
         Player,
         Chest,
+        Enemy,
         Floor
     }
 
@@ -38,6 +40,7 @@ namespace Drahcir_Htiek.Logic
         public List<Corner_Wall> CornerWalls { get; private set; } = new List<Corner_Wall>();
         public List<Door> Doors { get; private set; } = new List<Door>();
         public List<Chests> Chests { get; private set; } = new List<Chests>();
+        public List<Enemy_test> Enemies { get; private set; } = new List<Enemy_test>();
         public List<Dundgeon_Floor> FloorTiles { get; private set; } = new List<Dundgeon_Floor>();
         public Vector2? PlayerStartPosition { get; private set; } = null;
 
@@ -127,6 +130,8 @@ namespace Drahcir_Htiek.Logic
                 _currentTool = EditorTool.Chest;
             if (currentKeyState.IsKeyDown(Keys.D7) && !_previousKeyState.IsKeyDown(Keys.D7))
                 _currentTool = EditorTool.Floor;
+            if (currentKeyState.IsKeyDown(Keys.D8) && !_previousKeyState.IsKeyDown(Keys.D8))
+                _currentTool = EditorTool.Enemy;
 
             if (currentKeyState.IsKeyDown(Keys.Q) && !_previousKeyState.IsKeyDown(Keys.Q))
                 _currentLayer = System.Math.Max(0, _currentLayer - 1);
@@ -693,6 +698,11 @@ namespace Drahcir_Htiek.Logic
                     Chests.Add(new Chests(snappedX, snappedY));
                     break;
 
+                case EditorTool.Enemy:
+                    var enemy = new Enemy_test(snappedX, snappedY) { Layer = _currentLayer };
+                    Enemies.Add(enemy);
+                    break;
+
                 case EditorTool.Floor:
                     FloorTiles.Add(new Dundgeon_Floor(snappedX, snappedY, _currentLayer));
                     break;
@@ -709,6 +719,7 @@ namespace Drahcir_Htiek.Logic
             CornerWalls.RemoveAll(w => w.Bounds.Intersects(mouseRect));
             Doors.RemoveAll(d => d.Bounds.Intersects(mouseRect));
             Chests.RemoveAll(c => c.Bounds.Intersects(mouseRect));
+            Enemies.RemoveAll(e => e.Bounds.Intersects(mouseRect));
             FloorTiles.RemoveAll(f => f.Bounds.Intersects(mouseRect));
 
             if (PlayerStartPosition.HasValue)
@@ -801,6 +812,16 @@ namespace Drahcir_Htiek.Logic
                         spriteBatch.Draw(_pixel, chestToCapture.Bounds, Color.Green);
                 }
                 ));
+            }
+
+            foreach (var enemy in Enemies)
+            {
+                var e = enemy;
+                drawableObjects.Add((e.Layer, () =>
+                {
+                    // Draw using enemy.Draw which uses the pixel texture
+                    e.Draw(spriteBatch, _pixel);
+                }));
             }
 
             var sortedObjects = drawableObjects.OrderBy(obj => obj.layer).ToList();
@@ -1068,6 +1089,10 @@ namespace Drahcir_Htiek.Logic
                     previewRect = new Rectangle(snappedX, snappedY, 16, 16);
                     previewColor = Color.Green * 0.5f;
                     break;
+                case EditorTool.Enemy:
+                    previewRect = new Rectangle(snappedX, snappedY, 16, 32);
+                    previewColor = Color.Red * 0.5f;
+                    break;
                 case EditorTool.Floor:
                     previewRect = new Rectangle(snappedX, snappedY, 16, 16);
                     previewColor = Color.Brown * 0.5f;
@@ -1087,7 +1112,7 @@ namespace Drahcir_Htiek.Logic
             List<string> uiLines = new List<string>
             {
                 "MAP EDITOR",
-                $"Current Tool: {_currentTool} (1-7 to switch)",
+                $"Current Tool: {_currentTool} (1-8 to switch)",
                 $"Layer: {_currentLayer} (Q/E to change)",
                 $"Zoom: {_camera.Zoom:F2}x (Scroll Wheel)",
                 $"Smart Snap: {(_smartSnapping ? "ON" : "OFF")} (T to toggle)",
@@ -1098,10 +1123,10 @@ namespace Drahcir_Htiek.Logic
                 "",
                 "Tools:",
                 "1: Horizontal Wall | 2: Vertical Wall | 3: Corner Wall",
-                "4: Door | 5: Player Start | 6: Chest | 7: Floor",
+                "4: Door | 5: Player Start | 6: Chest | 7: Floor | 8: Enemy",
                 "Ctrl+S: Save Map | Ctrl+L: Load Map",
                 "",
-                $"Objects: Walls={HorWalls.Count + VertWalls.Count + CornerWalls.Count}, Chests={Chests.Count}, Floors={FloorTiles.Count}",
+                $"Objects: Walls={HorWalls.Count + VertWalls.Count + CornerWalls.Count}, Chests={Chests.Count}, Enemies={Enemies.Count}, Floors={FloorTiles.Count}",
                 $"Camera: X={_camera.Position.X:F0}, Y={_camera.Position.Y:F0}"
             };
 
@@ -1183,6 +1208,16 @@ namespace Drahcir_Htiek.Logic
                 });
             }
 
+            foreach (var enemy in Enemies)
+            {
+                mapData.Enemies.Add(new EnemyData
+                {
+                    X = enemy.Bounds.X,
+                    Y = enemy.Bounds.Y,
+                    Layer = enemy.Layer
+                });
+            }
+
             foreach (var floor in FloorTiles)
             {
                 mapData.FloorTiles.Add(new FloorTileData
@@ -1228,6 +1263,7 @@ namespace Drahcir_Htiek.Logic
             CornerWalls.Clear();
             Doors.Clear();
             Chests.Clear();
+            Enemies.Clear();
             FloorTiles.Clear();
 
             foreach (var wallData in mapData.HorWalls)
@@ -1253,6 +1289,12 @@ namespace Drahcir_Htiek.Logic
             foreach (var chestData in mapData.Chests)
             {
                 Chests.Add(new Chests(chestData.X, chestData.Y));
+            }
+
+            foreach (var enemyData in mapData.Enemies)
+            {
+                var e = new Enemy_test(enemyData.X, enemyData.Y) { Layer = enemyData.Layer };
+                Enemies.Add(e);
             }
 
             foreach (var floorData in mapData.FloorTiles)

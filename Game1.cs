@@ -8,6 +8,7 @@ using Drahcir_Htiek.Menues;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using Drahcir_Htiek.Entities;
 
 namespace Drahcir_Htiek
 {
@@ -27,6 +28,7 @@ namespace Drahcir_Htiek
         private bool _inMenu = true;
         private bool _inMapMaker = false;
         private Map_Maker _mapMaker;
+        private Enemy_test _enemy;
 
         private KeyboardState _previousKeyState;
 
@@ -45,6 +47,7 @@ namespace Drahcir_Htiek
         {
             _Map = new Dundgeon();
             _player = new Player(54, 58);
+            _enemy = new Enemy_test(200, 200);
             _chest = new Chests(260, 180);
             _camera = new Camera_test();
             _debugMode = new Debug_Mode();
