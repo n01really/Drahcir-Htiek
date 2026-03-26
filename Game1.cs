@@ -43,21 +43,13 @@ namespace Drahcir_Htiek
 
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
             _Map = new Dundgeon();
-
             _player = new Player(54, 58);
-
             _chest = new Chests(260, 180);
-
             _camera = new Camera_test();
-
             _debugMode = new Debug_Mode();
-
             _mainMenu = new Main_menu(1920, 1080);
-
             _mapMaker = new Map_Maker();
-
             base.Initialize();
         }
 
@@ -65,11 +57,12 @@ namespace Drahcir_Htiek
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // TODO: use this.Content to load your game content here
             _pixel = new Texture2D(GraphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
 
             _debugMode.SetPixelTexture(_pixel);
+
+            _player.Texture = Content.Load<Texture2D>("Female Skin1");
 
             _chest.Texture = Content.Load<Texture2D>("Chest");
             _Map.HorWallTexture = Content.Load<Texture2D>("Hori_Wall");
@@ -89,10 +82,9 @@ namespace Drahcir_Htiek
         {
             KeyboardState currentKeyState = Keyboard.GetState();
 
-            if ((GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || 
+            if ((GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
                 (currentKeyState.IsKeyDown(Keys.Escape) && !_previousKeyState.IsKeyDown(Keys.Escape))))
             {
-                // Escape tar dig tillbaka till menyn från map maker eller spelet
                 if (_inMapMaker || !_inMenu)
                 {
                     _inMenu = true;
@@ -113,10 +105,8 @@ namespace Drahcir_Htiek
 
                 if (_mainMenu.StartGameClicked)
                 {
-                    // Ladda kartan och starta spelet
                     Load_Map.LoadFromJson(_Map, "Dungeon_Floor_One");
-                    
-                    // Sätt spelarens position från kartan
+
                     var playerStartPos = Load_Map.GetPlayerStartPosition("Dungeon_Floor_One");
                     if (playerStartPos.HasValue)
                     {
@@ -127,7 +117,7 @@ namespace Drahcir_Htiek
                             _player.Bounds.Height
                         );
                     }
-                    
+
                     _inMenu = false;
                     _inMapMaker = false;
                     _mainMenu.Reset();
@@ -145,13 +135,11 @@ namespace Drahcir_Htiek
             }
             else if (_inMapMaker)
             {
-                // Map Maker mode - låt Map_Maker hantera alla inputs inklusive zoom
                 _mapMaker.Update(GraphicsDevice.Viewport);
-                
-                // Låt kameran röra sig fritt i map maker (t.x. med piltangenterna)
+
                 var kstate = Keyboard.GetState();
                 int cameraSpeed = 5;
-                
+
                 if (kstate.IsKeyDown(Keys.Left))
                     _camera.Position = new Vector2(_camera.Position.X - cameraSpeed, _camera.Position.Y);
                 if (kstate.IsKeyDown(Keys.Right))
@@ -163,41 +151,54 @@ namespace Drahcir_Htiek
             }
             else
             {
-                // Normal game mode
                 _debugMode.Update();
 
                 var kstate = Keyboard.GetState();
-                int speed = 1; 
+                int speed = 1;
 
-                
-                Rectangle NextBounds = _player.Bounds;
+                // Skapa nästa position för rendering
+                Rectangle nextBounds = _player.Bounds;
 
-               
-                if (kstate.IsKeyDown(Keys.A)) NextBounds.X -= speed;
-                if (kstate.IsKeyDown(Keys.D)) NextBounds.X += speed;
+                // Flytta X
+                if (kstate.IsKeyDown(Keys.A)) nextBounds.X -= speed;
+                if (kstate.IsKeyDown(Keys.D)) nextBounds.X += speed;
 
-               
-                if (CollisionHandler.IsColliding(NextBounds, _player.Bounds, _Map) || CollisionHandler.IsColliding(NextBounds, _chest))
+                // Skapa nästa kollisionsruta (16x32, centrerad)
+                Rectangle nextCollisionBounds = new Rectangle(
+                    nextBounds.X + (nextBounds.Width / 2) - 8,
+                    nextBounds.Y + nextBounds.Height - 32,
+                    16,
+                    32
+                );
+
+                if (CollisionHandler.IsColliding(nextCollisionBounds, _player.CollisionBounds, _Map) ||
+                    CollisionHandler.IsColliding(nextCollisionBounds, _chest))
                 {
-                    NextBounds.X = _player.Bounds.X; // Krock! Vi återställer X-positionen.
+                    nextBounds.X = _player.Bounds.X;
                 }
 
-               
-                if (kstate.IsKeyDown(Keys.W)) NextBounds.Y -= speed;
-                if (kstate.IsKeyDown(Keys.S)) NextBounds.Y += speed;
+                // Flytta Y
+                if (kstate.IsKeyDown(Keys.W)) nextBounds.Y -= speed;
+                if (kstate.IsKeyDown(Keys.S)) nextBounds.Y += speed;
 
-               
-                if (CollisionHandler.IsColliding(NextBounds, _player.Bounds, _Map) || CollisionHandler.IsColliding(NextBounds, _chest))
+                // Uppdatera kollisionsruta för Y
+                nextCollisionBounds = new Rectangle(
+                    nextBounds.X + (nextBounds.Width / 2) - 8,
+                    nextBounds.Y + nextBounds.Height - 32,
+                    16,
+                    32
+                );
+
+                if (CollisionHandler.IsColliding(nextCollisionBounds, _player.CollisionBounds, _Map) ||
+                    CollisionHandler.IsColliding(nextCollisionBounds, _chest))
                 {
-                    NextBounds.Y = _player.Bounds.Y; 
+                    nextBounds.Y = _player.Bounds.Y;
                 }
 
-               
-                _player.Bounds = NextBounds;
+                _player.Bounds = nextBounds;
 
-                // Uppdatera spelarens layer baserat på position
                 UpdatePlayerLayer();
-                
+
                 _camera.Update();
                 _camera.Follow(_player.Bounds, GraphicsDevice.Viewport);
             }
@@ -207,46 +208,34 @@ namespace Drahcir_Htiek
 
         private void UpdatePlayerLayer()
         {
-            // Standard layer för spelaren (högre än de flesta väggar)
             _player.Layer = 5;
 
-            // Kolla varje horisontell vägg
             foreach (var wall in _Map.HorWalls)
             {
-                // Kontrollera om spelaren är nära väggen horisontellt (X-axeln)
-                bool isNearWallHorizontally = _player.Bounds.Right > wall.Bounds.Left && 
+                bool isNearWallHorizontally = _player.Bounds.Right > wall.Bounds.Left &&
                                               _player.Bounds.Left < wall.Bounds.Right;
-                
-                // Kontrollera om spelaren är nära väggen vertikalt (Y-axeln)
-                // Spelaren måste vara inom rimligt avstånd från väggen (t.ex. 60 pixlar)
+
                 int distanceToWall = System.Math.Abs(_player.Bounds.Center.Y - wall.Bounds.Center.Y);
                 bool isNearWallVertically = distanceToWall < 60;
-                
-                if (!isNearWallHorizontally || !isNearWallVertically)
-                    continue; // Skippa väggar som spelaren inte är nära
 
-                // Jämför spelarens fötter (Bottom) med vägggens botten (Bottom)
-                // Lägg till en buffert på 16 pixlar så att spelaren måste vara klart ovanför
-                // för att ritas bakom väggen
+                if (!isNearWallHorizontally || !isNearWallVertically)
+                    continue;
+
                 if (_player.Bounds.Bottom < (wall.Bounds.Bottom - 16))
                 {
-                    // Sätt spelarens layer lägre så den ritas bakom väggen
                     _player.Layer = wall.Layer - 1;
-                    break; // En vägg är tillräcklig för att bestämma layer
+                    break;
                 }
             }
 
-            // Kolla även corner walls (exakt samma logik)
             foreach (var wall in _Map.CornerWalls)
             {
-                // Kontrollera om spelaren är nära väggen horisontellt (X-axeln)
-                bool isNearWallHorizontally = _player.Bounds.Right > wall.Bounds.Left && 
+                bool isNearWallHorizontally = _player.Bounds.Right > wall.Bounds.Left &&
                                               _player.Bounds.Left < wall.Bounds.Right;
-                
-                // Kontrollera om spelaren är nära väggen vertikalt (Y-axeln)
+
                 int distanceToWall = System.Math.Abs(_player.Bounds.Center.Y - wall.Bounds.Center.Y);
                 bool isNearWallVertically = distanceToWall < 60;
-                
+
                 if (!isNearWallHorizontally || !isNearWallVertically)
                     continue;
 
@@ -270,31 +259,25 @@ namespace Drahcir_Htiek
             }
             else if (_inMapMaker)
             {
-                // Map Maker mode
                 _mapMaker.Draw(_spriteBatch, GraphicsDevice, Mouse.GetState(),
-                              _Map.HorWallTexture, _Map.VertWallTexture, 
+                              _Map.HorWallTexture, _Map.VertWallTexture,
                               _Map.CornerWallTexture, _chest.Texture, _Map.DundgeonFloorTexture);
             }
             else
             {
-                // Normal game mode - rita spelet
                 _spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _camera.Transform);
-                
-                // Rita kartan
+
                 _Map.Draw(_spriteBatch);
-                
-                // Rita kistor
+
                 if (_chest != null && _chest.Texture != null)
                 {
                     _spriteBatch.Draw(_chest.Texture, _chest.Bounds, Color.White);
                 }
-                
-                // Rita spelaren
-                _spriteBatch.Draw(_pixel, _player.Bounds, Color.Blue);
-                
+
+                _player.Draw(_spriteBatch, _pixel);
+
                 _spriteBatch.End();
 
-                // Rita debug information (utan kamera transform)
                 if (_debugMode != null)
                 {
                     _spriteBatch.Begin(samplerState: SamplerState.PointClamp);

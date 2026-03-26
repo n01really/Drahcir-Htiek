@@ -56,6 +56,18 @@
 /processorParam:TextureFormat=Color
 /build:Dundgeon_floor.png
 
+#begin Female Skin1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Female Skin1.png;Female1.png
+
 #begin Hori_Wall.png
 /importer:TextureImporter
 /processor:TextureProcessor
