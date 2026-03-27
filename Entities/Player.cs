@@ -19,6 +19,11 @@ namespace Drahcir_Htiek.Test_map
         private int _frameWidth = 64;
         private int _frameHeight = 80;
 
+        // Collision box size and vertical offset (negative moves the box up)
+        private int _collisionWidth = 12;
+        private int _collisionHeight = 24;
+        private int _collisionYOffset = -8; // change this to move box up/down
+
         public Player(int startX, int startY) 
         { 
             Bounds = new Rectangle(startX, startY, 32, 64);
@@ -30,12 +35,13 @@ namespace Drahcir_Htiek.Test_map
         {
             get
             {
-                // Centrerad horisontellt och vertikalt i Bounds
+                int cx = Bounds.Center.X;
+                int cy = Bounds.Center.Y + _collisionYOffset;
                 return new Rectangle(
-                    Bounds.X + (Bounds.Width / 2) - 8 + 4, // 8 = 16/2
-                    Bounds.Y + (Bounds.Height / 2) - 16, // 16 = 32/2
-                    16,
-                    32
+                    cx - (_collisionWidth / 2),
+                    cy - (_collisionHeight / 2),
+                    _collisionWidth,
+                    _collisionHeight
                 );
             }
         }
@@ -52,7 +58,7 @@ namespace Drahcir_Htiek.Test_map
             }
 
             // Debug: rita kollisionen (CollisionBounds) i rött, halvgenomskinligt
-            //spriteBatch.Draw(pixel, CollisionBounds, Color.Red * 0.5f);
+            spriteBatch.Draw(pixel, CollisionBounds, Color.Red * 0.5f);
         }
 
         public void SetFrame(int frameX, int frameY)
