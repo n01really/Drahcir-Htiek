@@ -16,35 +16,35 @@ namespace Drahcir_Htiek.Test_map
         public Texture2D Texture;
 
         private Rectangle _sourceRectangle;
-        private int _frameWidth = 64;
-        private int _frameHeight = 80;
+        private int _frameWidth = 16;
+        private int _frameHeight = 32;
 
         // Collision box size and vertical offset (negative moves the box up)
-        private int _collisionWidth = 12;
-        private int _collisionHeight = 24;
-        private int _collisionYOffset = -8; // change this to move box up/down
+        //private int _collisionWidth = 12;
+        //private int _collisionHeight = 24;
+        //private int _collisionYOffset = -8; // change this to move box up/down
 
         public Player(int startX, int startY) 
         { 
-            Bounds = new Rectangle(startX, startY, 32, 64);
+            Bounds = new Rectangle(startX, startY, _frameWidth, _frameHeight);
             Layer = 5; // Standard layer
             SetFrame(0, 0); // Default to the first frame of the sprite sheet
         }
 
-        public Rectangle CollisionBounds
-        {
-            get
-            {
-                int cx = Bounds.Center.X;
-                int cy = Bounds.Center.Y + _collisionYOffset;
-                return new Rectangle(
-                    cx - (_collisionWidth / 2),
-                    cy - (_collisionHeight / 2),
-                    _collisionWidth,
-                    _collisionHeight
-                );
-            }
-        }
+        //public Rectangle CollisionBounds
+        //{
+        //    get
+        //    {
+        //        int cx = Bounds.Center.X;
+        //        int cy = Bounds.Center.Y + _collisionYOffset;
+        //        return new Rectangle(
+        //            cx - (_collisionWidth / 2),
+        //            cy - (_collisionHeight / 2),
+        //            _collisionWidth,
+        //            _collisionHeight
+        //        );
+        //    }
+        //}
 
         public void Draw(SpriteBatch spriteBatch, Texture2D pixel)
         {
@@ -58,7 +58,7 @@ namespace Drahcir_Htiek.Test_map
             }
 
             // Debug: rita kollisionen (CollisionBounds) i rött, halvgenomskinligt
-            spriteBatch.Draw(pixel, CollisionBounds, Color.Red * 0.5f);
+            //spriteBatch.Draw(pixel, CollisionBounds, Color.Red * 0.5f);
         }
 
         public void SetFrame(int frameX, int frameY)

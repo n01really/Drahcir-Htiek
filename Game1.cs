@@ -65,7 +65,7 @@ namespace Drahcir_Htiek
 
             _debugMode.SetPixelTexture(_pixel);
 
-            _player.Texture = Content.Load<Texture2D>("Test");
+            _player.Texture = Content.Load<Texture2D>("SpriteSheettest");
 
             _chest.Texture = Content.Load<Texture2D>("Chest");
             _Map.HorWallTexture = Content.Load<Texture2D>("Hori_Wall");
@@ -174,7 +174,7 @@ namespace Drahcir_Htiek
                     32
                 );
 
-                if (CollisionHandler.IsColliding(nextCollisionBounds, _player.CollisionBounds, _Map) ||
+                if (CollisionHandler.IsColliding(nextCollisionBounds, _player.Bounds, _Map) ||
                     CollisionHandler.IsColliding(nextCollisionBounds, _chest))
                 {
                     nextBounds.X = _player.Bounds.X;
@@ -192,7 +192,7 @@ namespace Drahcir_Htiek
                     32
                 );
 
-                if (CollisionHandler.IsColliding(nextCollisionBounds, _player.CollisionBounds, _Map) ||
+                if (CollisionHandler.IsColliding(nextCollisionBounds, _player.Bounds, _Map) ||
                     CollisionHandler.IsColliding(nextCollisionBounds, _chest))
                 {
                     nextBounds.Y = _player.Bounds.Y;
