@@ -18,10 +18,11 @@ namespace Drahcir_Htiek.Test_map
         private int _frameWidth = 16;
         private int _frameHeight = 32;
 
-        // Collision box size and vertical offset (negative moves the box up)
-        //private int _collisionWidth = 12;
-        //private int _collisionHeight = 24;
-        //private int _collisionYOffset = -8; // change this to move box up/down
+        private float _animationTimer = 0f;
+        private int _currentFrame = 0;
+        private const float _frameTime = 0.15f; // Time per frame in seconds
+        private const int _framesPerDirection = 3; // Number of frames for each direction in the sprite sheet
+        private int _currentDirection = 0; // 0 = down, 1 = left, 2 = right, 3 = up
 
         public Player(int startX, int startY) 
         { 
@@ -30,20 +31,35 @@ namespace Drahcir_Htiek.Test_map
             SetFrame(0, 0); // Default to the first frame of the sprite sheet
         }
 
-        //public Rectangle CollisionBounds
-        //{
-        //    get
-        //    {
-        //        int cx = Bounds.Center.X;
-        //        int cy = Bounds.Center.Y + _collisionYOffset;
-        //        return new Rectangle(
-        //            cx - (_collisionWidth / 2),
-        //            cy - (_collisionHeight / 2),
-        //            _collisionWidth,
-        //            _collisionHeight
-        //        );
-        //    }
-        //}
+
+        public void Update(GameTime gameTime, bool isMoving, Vector2 movementDirection)
+        {
+            // Uppdatera riktning baserat på rörelse
+            if (movementDirection.Y > 0) _currentDirection = 0; // Ner (S)
+            else if (movementDirection.Y < 0) _currentDirection = 3; // Upp (W)
+            else if (movementDirection.X > 0) _currentDirection = 1; // Höger (D)
+            else if (movementDirection.X < 0) _currentDirection = 2; // Vänster (A)
+
+            // Animera endast om spelaren rör sig
+            if (isMoving)
+            {
+                _animationTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                if (_animationTimer >= _frameTime)
+                {
+                    _currentFrame = (_currentFrame + 1) % _framesPerDirection;
+                    _animationTimer = 0f;
+                }
+            }
+            else
+            {
+                _currentFrame = 0; // Visa idle frame
+                _animationTimer = 0f;
+            }
+
+            SetFrame(_currentFrame, _currentDirection);
+        }
+
 
         public void Draw(SpriteBatch spriteBatch, Texture2D pixel)
         {

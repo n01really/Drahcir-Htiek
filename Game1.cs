@@ -159,12 +159,16 @@ namespace Drahcir_Htiek
                 var kstate = Keyboard.GetState();
                 int speed = 1;
 
+                // Track movement direction and if the player is moving
+                Vector2 movementDirection = Vector2.Zero;
+                bool isMoving = false;
+
                 // Skapa nästa position för rendering
                 Rectangle nextBounds = _player.Bounds;
 
                 // Flytta X
-                if (kstate.IsKeyDown(Keys.A)) nextBounds.X -= speed;
-                if (kstate.IsKeyDown(Keys.D)) nextBounds.X += speed;
+                if (kstate.IsKeyDown(Keys.A)) { nextBounds.X -= speed; movementDirection.X -= 1; isMoving = true; }
+                if (kstate.IsKeyDown(Keys.D)) { nextBounds.X += speed; movementDirection.X += 1; isMoving = true; }
 
                 // Skapa nästa kollisionsruta (16x32, centrerad)
                 Rectangle nextCollisionBounds = new Rectangle(
@@ -181,8 +185,8 @@ namespace Drahcir_Htiek
                 }
 
                 // Flytta Y
-                if (kstate.IsKeyDown(Keys.W)) nextBounds.Y -= speed;
-                if (kstate.IsKeyDown(Keys.S)) nextBounds.Y += speed;
+                if (kstate.IsKeyDown(Keys.W)) { nextBounds.Y -= speed; movementDirection.Y -= 1; isMoving = true; }
+                if (kstate.IsKeyDown(Keys.S)) { nextBounds.Y += speed; movementDirection.Y += 1; isMoving = true; }
 
                 // Uppdatera kollisionsruta för Y
                 nextCollisionBounds = new Rectangle(
@@ -200,13 +204,13 @@ namespace Drahcir_Htiek
 
                 _player.Bounds = nextBounds;
 
+                _player.Update(gameTime, isMoving, movementDirection);
+
                 UpdatePlayerLayer();
 
                 _camera.Update();
                 _camera.Follow(_player.Bounds, GraphicsDevice.Viewport);
             }
-
-            base.Update(gameTime);
         }
 
         private void UpdatePlayerLayer()
