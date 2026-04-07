@@ -167,11 +167,6 @@ namespace Drahcir_Htiek.Test_map
         public List<Corner_Wall> CornerWalls;
         public List<Door> Doors;
         public List<Dundgeon_Floor> FloorTiles;
-        public Texture2D HorWallTexture;
-        public Texture2D VertWallTexture;
-        public Texture2D CornerWallTexture;
-        public Texture2D DoorTexture;
-        public Texture2D DundgeonFloorTexture;
 
         public Dundgeon()
         {
@@ -256,11 +251,8 @@ namespace Drahcir_Htiek.Test_map
             // Rita floor tiles först (under allt annat)
             foreach (var floor in FloorTiles)
             {
-                if (DundgeonFloorTexture != null)
-                {
-                    floor.Texture = DundgeonFloorTexture;
-                    floor.Draw(spriteBatch);
-                }
+                floor.Texture = Drahcir_Htiek.TextureLoader.DungeonFloorTexture;
+                floor.Draw(spriteBatch);
             }
 
             // Sortera och rita i lager-ordning
@@ -278,22 +270,22 @@ namespace Drahcir_Htiek.Test_map
             {
                 if (wall is Hor_Wall hw)
                 {
-                    hw.Texture = HorWallTexture;
+                    hw.Texture = Drahcir_Htiek.TextureLoader.HorWallTexture;
                     hw.Draw(spriteBatch);
                 }
                 else if (wall is Vert_Wall vw)
                 {
-                    vw.Texture = VertWallTexture;
+                    vw.Texture = Drahcir_Htiek.TextureLoader.VertWallTexture;
                     vw.Draw(spriteBatch);
                 }
                 else if (wall is Corner_Wall cw)
                 {
-                    cw.Texture = CornerWallTexture;
+                    cw.Texture = Drahcir_Htiek.TextureLoader.CornerWallTexture;
                     cw.Draw(spriteBatch);
                 }
                 else if (wall is Door d)
                 {
-                    d.Texture = DoorTexture;
+                    d.Texture = Drahcir_Htiek.TextureLoader.DoorTexture;
                     d.Draw(spriteBatch);
                 }
             }

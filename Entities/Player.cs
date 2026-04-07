@@ -13,7 +13,6 @@ namespace Drahcir_Htiek.Test_map
         public Rectangle Bounds;
         public Color Color = Color.White;
         public int Layer;
-        public Texture2D Texture;
 
         private Rectangle _sourceRectangle;
         private int _frameWidth = 16;
@@ -48,9 +47,9 @@ namespace Drahcir_Htiek.Test_map
 
         public void Draw(SpriteBatch spriteBatch, Texture2D pixel)
         {
-            if (Texture != null)
+            if (Drahcir_Htiek.TextureLoader.PlayerTexture != null)
             {
-                spriteBatch.Draw(Texture, Bounds, _sourceRectangle, Color);
+                spriteBatch.Draw(Drahcir_Htiek.TextureLoader.PlayerTexture, Bounds, _sourceRectangle, Color);
             }
             else
             {

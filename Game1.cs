@@ -17,12 +17,10 @@ namespace Drahcir_Htiek
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
-        private Texture2D _pixel;
         private Player _player;
         private Dundgeon _Map;
         private Chests _chest;
         private Camera_test _camera;
-        private SpriteFont _debugFont;
         private Debug_Mode _debugMode;
         private Main_menu _mainMenu;
         private bool _inMenu = true;
@@ -60,36 +58,26 @@ namespace Drahcir_Htiek
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            _pixel = new Texture2D(GraphicsDevice, 1, 1);
-            _pixel.SetData(new[] { Color.White });
+            // Ladda alla texturer via TextureLoader
+            TextureLoader.LoadContent(Content, GraphicsDevice);
 
-            _debugMode.SetPixelTexture(_pixel);
+            _debugMode.SetPixelTexture(TextureLoader.Pixel);
+            _debugMode.SetFont(TextureLoader.DebugFont);
 
-            _player.Texture = Content.Load<Texture2D>("SpriteSheettest");
-
-            _chest.Texture = Content.Load<Texture2D>("Chest");
-            _Map.HorWallTexture = Content.Load<Texture2D>("Hori_Wall");
-            _Map.CornerWallTexture = Content.Load<Texture2D>("Wall_Corner");
-            _Map.VertWallTexture = Content.Load<Texture2D>("Vert_Wall");
-            _Map.DoorTexture = Content.Load<Texture2D>("Door");
-            _Map.DundgeonFloorTexture = Content.Load<Texture2D>("Dundgeon_Floor");
-
-            _debugFont = Content.Load<SpriteFont>("DebugFont");
-            _debugMode.SetFont(_debugFont);
-            _mainMenu.LoadContent(_debugFont, _pixel);
-            _mapMaker.SetFont(_debugFont);
-            _mapMaker.SetPixelTexture(_pixel);
+            _mainMenu.LoadContent(TextureLoader.DebugFont, TextureLoader.Pixel);
+            _mapMaker.SetFont(TextureLoader.DebugFont);
+            _mapMaker.SetPixelTexture(TextureLoader.Pixel);
 
             // Initialisera texture menyn för Map Maker
             _mapMaker.InitializeTextureMenu(
                 GraphicsDevice,
-                _Map.HorWallTexture,
-                _Map.VertWallTexture,
-                _Map.CornerWallTexture,
-                _Map.DoorTexture,
-                _Map.DundgeonFloorTexture,
-                _chest.Texture,
-                _pixel  // Använder _pixel för enemy tills du har en enemy texture
+                TextureLoader.HorWallTexture,
+                TextureLoader.VertWallTexture,
+                TextureLoader.CornerWallTexture,
+                TextureLoader.DoorTexture,
+                TextureLoader.DungeonFloorTexture,
+                TextureLoader.ChestTexture,
+                TextureLoader.Pixel
             );
         }
 
@@ -275,8 +263,8 @@ namespace Drahcir_Htiek
             else if (_inMapMaker)
             {
                 _mapMaker.Draw(_spriteBatch, GraphicsDevice, Mouse.GetState(),
-                              _Map.HorWallTexture, _Map.VertWallTexture,
-                              _Map.CornerWallTexture, _chest.Texture, _Map.DundgeonFloorTexture);
+                              TextureLoader.HorWallTexture, TextureLoader.VertWallTexture,
+                              TextureLoader.CornerWallTexture, TextureLoader.ChestTexture, TextureLoader.DungeonFloorTexture);
             }
             else
             {
@@ -284,12 +272,9 @@ namespace Drahcir_Htiek
 
                 _Map.Draw(_spriteBatch);
 
-                if (_chest != null && _chest.Texture != null)
-                {
-                    _spriteBatch.Draw(_chest.Texture, _chest.Bounds, Color.White);
-                }
+                _chest.Draw(_spriteBatch);
 
-                _player.Draw(_spriteBatch, _pixel);
+                _player.Draw(_spriteBatch, TextureLoader.Pixel);
 
                 _spriteBatch.End();
 
