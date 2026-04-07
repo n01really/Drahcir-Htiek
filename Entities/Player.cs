@@ -34,11 +34,20 @@ namespace Drahcir_Htiek.Test_map
 
         public void Update(GameTime gameTime, bool isMoving, Vector2 movementDirection)
         {
+            int previousDirection = _currentDirection;
+
             // Uppdatera riktning baserat på rörelse
             if (movementDirection.Y > 0) _currentDirection = 0; // Ner (S)
             else if (movementDirection.Y < 0) _currentDirection = 3; // Upp (W)
             else if (movementDirection.X > 0) _currentDirection = 1; // Höger (D)
             else if (movementDirection.X < 0) _currentDirection = 2; // Vänster (A)
+
+            // Återställ animationen om riktningen ändras
+            if (previousDirection != _currentDirection)
+            {
+                _currentFrame = 0;
+                _animationTimer = 0f;
+            }
 
             // Animera endast om spelaren rör sig
             if (isMoving)
