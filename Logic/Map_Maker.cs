@@ -51,6 +51,8 @@ namespace Drahcir_Htiek.Logic
         private Save_Map_Menu _saveMapMenu;
         private bool _lastActionWasSave = false;
 
+        private EditorMenues _textureMenu;
+
         // Konstanter för väggstorlekar
         private const int DefaultHeight = 48;
         private const int DefaultThickness = 16;
@@ -59,6 +61,7 @@ namespace Drahcir_Htiek.Logic
         {
             _camera = new Camera.Map_Maker_Camera();
             _saveMapMenu = new Save_Map_Menu();
+            _textureMenu = new EditorMenues();
         }
 
         public void SetFont(SpriteFont font)
@@ -71,6 +74,15 @@ namespace Drahcir_Htiek.Logic
         {
             _pixel = pixel;
             _saveMapMenu.SetPixelTexture(pixel);
+        }
+
+        public void InitializeTextureMenu(GraphicsDevice graphicsDevice,
+            Texture2D horWallTex, Texture2D vertWallTex, Texture2D cornerWallTex,
+            Texture2D doorTex, Texture2D floorTex, Texture2D chestTex, Texture2D enemyTex)
+        {
+            _textureMenu.Initialize(graphicsDevice, _font, _pixel);
+            _textureMenu.SetupDefaultItems(horWallTex, vertWallTex, cornerWallTex,
+                doorTex, floorTex, chestTex, enemyTex);
         }
 
         public void Update(Viewport viewport)
@@ -116,6 +128,22 @@ namespace Drahcir_Htiek.Logic
                 return; // Avsluta Update tidigt
             }
 
+            // Update texture menu
+            _textureMenu.Update();
+
+            // Update current tool based on texture menu selection
+            if (_textureMenu.SelectedItem != null)
+            {
+                _currentTool = _textureMenu.SelectedItem.Tool;
+            }
+
+            // Toggle texture menu with Tab key
+            if (currentKeyState.IsKeyDown(Keys.Tab) && !_previousKeyState.IsKeyDown(Keys.Tab))
+            {
+                _textureMenu.Toggle();
+            }
+
+            // Fallback keyboard shortcuts (still work)
             if (currentKeyState.IsKeyDown(Keys.D1) && !_previousKeyState.IsKeyDown(Keys.D1))
                 _currentTool = EditorTool.HorizontalWall;
             if (currentKeyState.IsKeyDown(Keys.D2) && !_previousKeyState.IsKeyDown(Keys.D2))
@@ -168,16 +196,21 @@ namespace Drahcir_Htiek.Logic
                 _lastActionWasSave = false;
             }
 
+            // Don't place objects if clicking on menu
+            bool isMouseOverMenu = _textureMenu.IsMouseOverMenu();
+
             if (currentMouseState.LeftButton == ButtonState.Pressed &&
                 _previousMouseState.LeftButton == ButtonState.Released &&
                 !_camera.IsDragging &&
-                !currentKeyState.IsKeyDown(Keys.Space))
+                !currentKeyState.IsKeyDown(Keys.Space) &&
+                !isMouseOverMenu)
             {
                 PlaceObject(currentMouseState);
             }
 
             if (currentMouseState.RightButton == ButtonState.Pressed &&
-                _previousMouseState.RightButton == ButtonState.Released)
+                _previousMouseState.RightButton == ButtonState.Released &&
+                !isMouseOverMenu)
             {
                 RemoveObject(currentMouseState);
             }
@@ -843,6 +876,7 @@ namespace Drahcir_Htiek.Logic
 
             spriteBatch.Begin(samplerState: SamplerState.PointClamp);
             DrawUI(spriteBatch);
+            _textureMenu.Draw(spriteBatch);
             _saveMapMenu.Draw(spriteBatch, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height);
             spriteBatch.End();
         }
@@ -877,7 +911,7 @@ namespace Drahcir_Htiek.Logic
 
         private void DrawPreview(SpriteBatch spriteBatch, MouseState mouseState)
         {
-            if (_pixel == null || _camera.IsDragging)
+            if (_pixel == null || _camera.IsDragging || _textureMenu.IsMouseOverMenu())
                 return;
 
             Vector2 worldPos = _camera.ScreenToWorld(new Vector2(mouseState.X, mouseState.Y));
@@ -1112,19 +1146,15 @@ namespace Drahcir_Htiek.Logic
             List<string> uiLines = new List<string>
             {
                 "MAP EDITOR",
-                $"Current Tool: {_currentTool} (1-8 to switch)",
+                $"Current Tool: {_currentTool}",
                 $"Layer: {_currentLayer} (Q/E to change)",
                 $"Zoom: {_camera.Zoom:F2}x (Scroll Wheel)",
                 $"Smart Snap: {(_smartSnapping ? "ON" : "OFF")} (T to toggle)",
+                "Tab: Toggle Texture Menu",
                 "Left Click: Place | Right Click: Remove",
                 "Middle Mouse / Space+Drag: Pan Camera",
                 "Arrow Keys: Move Camera | R: Reset Camera",
-                "ESC: Return to Menu",
-                "",
-                "Tools:",
-                "1: Horizontal Wall | 2: Vertical Wall | 3: Corner Wall",
-                "4: Door | 5: Player Start | 6: Chest | 7: Floor | 8: Enemy",
-                "Ctrl+S: Save Map | Ctrl+L: Load Map",
+                "Ctrl+S: Save | Ctrl+L: Load | ESC: Return to Menu",
                 "",
                 $"Objects: Walls={HorWalls.Count + VertWalls.Count + CornerWalls.Count}, Chests={Chests.Count}, Enemies={Enemies.Count}, Floors={FloorTiles.Count}",
                 $"Camera: X={_camera.Position.X:F0}, Y={_camera.Position.Y:F0}"

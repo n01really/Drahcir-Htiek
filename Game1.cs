@@ -79,6 +79,18 @@ namespace Drahcir_Htiek
             _mainMenu.LoadContent(_debugFont, _pixel);
             _mapMaker.SetFont(_debugFont);
             _mapMaker.SetPixelTexture(_pixel);
+
+            // Initialisera texture menyn för Map Maker
+            _mapMaker.InitializeTextureMenu(
+                GraphicsDevice,
+                _Map.HorWallTexture,
+                _Map.VertWallTexture,
+                _Map.CornerWallTexture,
+                _Map.DoorTexture,
+                _Map.DundgeonFloorTexture,
+                _chest.Texture,
+                _pixel  // Använder _pixel för enemy tills du har en enemy texture
+            );
         }
 
         protected override void Update(GameTime gameTime)
