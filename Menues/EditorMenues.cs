@@ -30,6 +30,7 @@ namespace Drahcir_Htiek.Menues
         private Texture2D _pixelTexture;
         private SpriteFont _font;
         private Rectangle _menuBounds;
+        private Rectangle _infoPanelBounds;
         private List<Rectangle> _tabBounds;
         private TextureCategory _currentTab;
         private Dictionary<TextureCategory, List<TextureMenuItem>> _menuItems;
@@ -37,13 +38,19 @@ namespace Drahcir_Htiek.Menues
         private MouseState _previousMouseState;
         private bool _isVisible;
 
+        // Info panel properties
+        private string _hoveredObjectInfo;
+        private Vector2 _lastPlacedPosition;
+
         private const int MenuWidth = 300;
         private const int TabHeight = 50;
+        private const int InfoPanelHeight = 120;
         private const int ItemSize = 64;
         private const int Padding = 12;
         private const int ItemsPerColumn = 2;
-        private const float ItemTextScale = 1.0f;  // Ökad från 0.7f
-        private const float TabTextScale = 0.65f;   // Ökad från 0.5f
+        private const float ItemTextScale = 1.0f;
+        private const float TabTextScale = 0.65f;
+        private const float InfoTextScale = 0.8f;
 
         public bool IsVisible => _isVisible;
         public TextureMenuItem SelectedItem => _selectedItem;
@@ -55,6 +62,8 @@ namespace Drahcir_Htiek.Menues
             _currentTab = TextureCategory.Walls;
             _isVisible = true;
             _previousMouseState = Mouse.GetState();
+            _hoveredObjectInfo = "";
+            _lastPlacedPosition = Vector2.Zero;
 
             foreach (TextureCategory category in Enum.GetValues(typeof(TextureCategory)))
             {
@@ -75,10 +84,28 @@ namespace Drahcir_Htiek.Menues
                 screenWidth - MenuWidth,
                 0,
                 MenuWidth,
-                screenHeight
+                screenHeight - InfoPanelHeight
+            );
+
+            // Info panel längst ner
+            _infoPanelBounds = new Rectangle(
+                0,
+                screenHeight - InfoPanelHeight,
+                screenWidth,
+                InfoPanelHeight
             );
 
             CalculateTabBounds();
+        }
+
+        public void SetHoveredObjectInfo(string info)
+        {
+            _hoveredObjectInfo = info;
+        }
+
+        public void SetLastPlacedPosition(Vector2 position)
+        {
+            _lastPlacedPosition = position;
         }
 
         public void AddTextureItem(TextureCategory category, string name, Rectangle sourceRect,
@@ -256,7 +283,7 @@ namespace Drahcir_Htiek.Menues
                 int row = itemIndex / ItemsPerColumn;
 
                 int x = contentArea.X + col * (ItemSize + Padding);
-                int y = contentArea.Y + row * (ItemSize + Padding + 40); // Ökat från 30 för mer textutrymme
+                int y = contentArea.Y + row * (ItemSize + Padding + 40);
 
                 item.DisplayBounds = new Rectangle(x, y, ItemSize, ItemSize);
 
@@ -283,7 +310,7 @@ namespace Drahcir_Htiek.Menues
                         // Calculate scale to fit within ItemSize
                         float scaleX = (float)ItemSize / item.SourceRect.Width;
                         float scaleY = (float)ItemSize / item.SourceRect.Height;
-                        float scale = Math.Min(scaleX, scaleY) * 0.8f; // 80% of available space
+                        float scale = Math.Min(scaleX, scaleY) * 0.8f;
 
                         int drawWidth = (int)(item.SourceRect.Width * scale);
                         int drawHeight = (int)(item.SourceRect.Height * scale);
@@ -357,6 +384,54 @@ namespace Drahcir_Htiek.Menues
 
             // Draw border för hela menyn
             DrawBorder(spriteBatch, _menuBounds, Color.White * 0.8f, 3);
+
+            // Draw info panel
+            DrawInfoPanel(spriteBatch);
+        }
+
+        private void DrawInfoPanel(SpriteBatch spriteBatch)
+        {
+            // Draw background
+            spriteBatch.Draw(_pixelTexture, _infoPanelBounds, Color.Black * 0.9f);
+            DrawBorder(spriteBatch, _infoPanelBounds, Color.White * 0.8f, 3);
+
+            if (_selectedItem == null) return;
+
+            Vector2 startPos = new Vector2(_infoPanelBounds.X + 20, _infoPanelBounds.Y + 15);
+            float lineHeight = _font.MeasureString("A").Y * InfoTextScale + 5;
+
+            // Selected Tool Info
+            List<string> infoLines = new List<string>
+            {
+                $"SELECTED TOOL: {_selectedItem.Tool}",
+                $"Name: {_selectedItem.Name}",
+                $"Texture Size: {_selectedItem.SourceRect.Width}x{_selectedItem.SourceRect.Height}",
+                $"Last Placed: X={_lastPlacedPosition.X:F0}, Y={_lastPlacedPosition.Y:F0}"
+            };
+
+            // Add hovered object info if available
+            if (!string.IsNullOrEmpty(_hoveredObjectInfo))
+            {
+                infoLines.Add("");
+                infoLines.Add("HOVERED OBJECT:");
+                infoLines.Add(_hoveredObjectInfo);
+            }
+
+            Vector2 currentPos = startPos;
+            foreach (string line in infoLines)
+            {
+                // Draw shadow
+                Vector2 shadowOffset = new Vector2(1, 1);
+                spriteBatch.DrawString(_font, line, currentPos + shadowOffset, Color.Black,
+                    0f, Vector2.Zero, InfoTextScale, SpriteEffects.None, 0f);
+                
+                // Draw text
+                Color textColor = line.StartsWith("SELECTED") || line.StartsWith("HOVERED") ? Color.Yellow : Color.White;
+                spriteBatch.DrawString(_font, line, currentPos, textColor,
+                    0f, Vector2.Zero, InfoTextScale, SpriteEffects.None, 0f);
+                
+                currentPos.Y += lineHeight;
+            }
         }
 
         private void DrawBorder(SpriteBatch spriteBatch, Rectangle rect, Color color, int thickness)
@@ -393,8 +468,8 @@ namespace Drahcir_Htiek.Menues
             MouseState mouseState = Mouse.GetState();
             Point mousePos = new Point(mouseState.X, mouseState.Y);
             
-            // Inkludera både menyn och tabbarna (som nu är en del av menyn)
-            return _menuBounds.Contains(mousePos);
+            // Inkludera både menyn och info panelen
+            return _menuBounds.Contains(mousePos) || _infoPanelBounds.Contains(mousePos);
         }
     }
 }

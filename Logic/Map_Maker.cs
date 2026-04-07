@@ -21,7 +21,15 @@ namespace Drahcir_Htiek.Logic
         Player,
         Chest,
         Enemy,
-        Floor
+        Floor,
+        SelectOnly  // Nytt verktyg
+    }
+
+    public interface IPlacedObject
+    {
+        Rectangle Bounds { get; set; }
+        int Layer { get; set; }
+        string GetTypeName();
     }
 
     internal class Map_Maker
@@ -32,8 +40,9 @@ namespace Drahcir_Htiek.Logic
         private Texture2D _pixel;
         private bool _isInitialized = false;
 
-        private EditorTool _currentTool = EditorTool.HorizontalWall;
+        private EditorTool _currentTool = EditorTool.SelectOnly;
         private int _currentLayer = 0;
+        private bool _selectOnlyMode = true;  // Nytt fält för att spåra select-only läge
 
         public List<Hor_Wall> HorWalls { get; private set; } = new List<Hor_Wall>();
         public List<Vert_Wall> VertWalls { get; private set; } = new List<Vert_Wall>();
@@ -52,6 +61,11 @@ namespace Drahcir_Htiek.Logic
         private bool _lastActionWasSave = false;
 
         private EditorMenues _textureMenu;
+
+        // Selection and movement
+        private object _selectedObject = null;
+        private string _selectedObjectType = "";
+        private int _moveSpeed = 1; // Pixels per keypress
 
         // Konstanter för väggstorlekar
         private const int DefaultHeight = 48;
@@ -98,7 +112,11 @@ namespace Drahcir_Htiek.Logic
                 return;
             }
 
-            _camera.Update(viewport);
+            // Only update camera if no object is selected
+            if (_selectedObject == null)
+            {
+                _camera.Update(viewport);
+            }
 
             // Om save/load-menyn är aktiv, hantera bara den
             if (_saveMapMenu.IsActive)
@@ -125,16 +143,40 @@ namespace Drahcir_Htiek.Logic
 
                 _previousKeyState = currentKeyState;
                 _previousMouseState = currentMouseState;
-                return; // Avsluta Update tidigt
+                return;
             }
 
             // Update texture menu
             _textureMenu.Update();
 
-            // Update current tool based on texture menu selection
-            if (_textureMenu.SelectedItem != null)
+            // Update current tool based on texture menu selection (om inte i select-only läge)
+            if (_textureMenu.SelectedItem != null && !_selectOnlyMode)
             {
                 _currentTool = _textureMenu.SelectedItem.Tool;
+            }
+
+            // Toggle select-only mode med P
+            if (currentKeyState.IsKeyDown(Keys.P) && !_previousKeyState.IsKeyDown(Keys.P))
+            {
+                _selectOnlyMode = !_selectOnlyMode;
+                if (_selectOnlyMode)
+                {
+                    _currentTool = EditorTool.SelectOnly;
+                    System.Diagnostics.Debug.WriteLine("Select-Only Mode: ON (ingen textur vald, kan endast markera objekt)");
+                }
+                else
+                {
+                    // Återgå till det verktyg som är valt i texture menu
+                    if (_textureMenu.SelectedItem != null)
+                    {
+                        _currentTool = _textureMenu.SelectedItem.Tool;
+                    }
+                    else
+                    {
+                        _currentTool = EditorTool.HorizontalWall;
+                    }
+                    System.Diagnostics.Debug.WriteLine($"Select-Only Mode: OFF (nuvarande verktyg: {_currentTool})");
+                }
             }
 
             // Toggle texture menu with Tab key
@@ -143,39 +185,72 @@ namespace Drahcir_Htiek.Logic
                 _textureMenu.Toggle();
             }
 
-            // Fallback keyboard shortcuts (still work)
-            if (currentKeyState.IsKeyDown(Keys.D1) && !_previousKeyState.IsKeyDown(Keys.D1))
-                _currentTool = EditorTool.HorizontalWall;
-            if (currentKeyState.IsKeyDown(Keys.D2) && !_previousKeyState.IsKeyDown(Keys.D2))
-                _currentTool = EditorTool.VerticalWall;
-            if (currentKeyState.IsKeyDown(Keys.D3) && !_previousKeyState.IsKeyDown(Keys.D3))
-                _currentTool = EditorTool.CornerWall;
-            if (currentKeyState.IsKeyDown(Keys.D4) && !_previousKeyState.IsKeyDown(Keys.D4))
-                _currentTool = EditorTool.Door;
-            if (currentKeyState.IsKeyDown(Keys.D5) && !_previousKeyState.IsKeyDown(Keys.D5))
-                _currentTool = EditorTool.Player;
-            if (currentKeyState.IsKeyDown(Keys.D6) && !_previousKeyState.IsKeyDown(Keys.D6))
-                _currentTool = EditorTool.Chest;
-            if (currentKeyState.IsKeyDown(Keys.D7) && !_previousKeyState.IsKeyDown(Keys.D7))
-                _currentTool = EditorTool.Floor;
-            if (currentKeyState.IsKeyDown(Keys.D8) && !_previousKeyState.IsKeyDown(Keys.D8))
-                _currentTool = EditorTool.Enemy;
-
-            if (currentKeyState.IsKeyDown(Keys.Q) && !_previousKeyState.IsKeyDown(Keys.Q))
-                _currentLayer = System.Math.Max(0, _currentLayer - 1);
-            if (currentKeyState.IsKeyDown(Keys.E) && !_previousKeyState.IsKeyDown(Keys.E))
-                _currentLayer++;
-
+            // Toggle Smart Snapping with T
             if (currentKeyState.IsKeyDown(Keys.T) && !_previousKeyState.IsKeyDown(Keys.T))
             {
                 _smartSnapping = !_smartSnapping;
                 System.Diagnostics.Debug.WriteLine($"Smart snapping: {_smartSnapping}");
             }
 
+            // Handle object selection and movement BEFORE other keyboard shortcuts
+            if (_selectedObject != null)
+            {
+                HandleSelectedObjectMovement(currentKeyState);
+                HandleSelectedObjectLayerChange(currentKeyState);
+            }
+
+            // Fallback keyboard shortcuts (fungerar inte i select-only läge)
+            if (!_selectOnlyMode)
+            {
+                if (currentKeyState.IsKeyDown(Keys.D1) && !_previousKeyState.IsKeyDown(Keys.D1))
+                    _currentTool = EditorTool.HorizontalWall;
+                if (currentKeyState.IsKeyDown(Keys.D2) && !_previousKeyState.IsKeyDown(Keys.D2))
+                    _currentTool = EditorTool.VerticalWall;
+                if (currentKeyState.IsKeyDown(Keys.D3) && !_previousKeyState.IsKeyDown(Keys.D3))
+                    _currentTool = EditorTool.CornerWall;
+                if (currentKeyState.IsKeyDown(Keys.D4) && !_previousKeyState.IsKeyDown(Keys.D4))
+                    _currentTool = EditorTool.Door;
+                if (currentKeyState.IsKeyDown(Keys.D5) && !_previousKeyState.IsKeyDown(Keys.D5))
+                    _currentTool = EditorTool.Player;
+                if (currentKeyState.IsKeyDown(Keys.D6) && !_previousKeyState.IsKeyDown(Keys.D6))
+                    _currentTool = EditorTool.Chest;
+                if (currentKeyState.IsKeyDown(Keys.D7) && !_previousKeyState.IsKeyDown(Keys.D7))
+                    _currentTool = EditorTool.Floor;
+                if (currentKeyState.IsKeyDown(Keys.D8) && !_previousKeyState.IsKeyDown(Keys.D8))
+                    _currentTool = EditorTool.Enemy;
+            }
+
+            if (currentKeyState.IsKeyDown(Keys.Q) && !_previousKeyState.IsKeyDown(Keys.Q))
+                _currentLayer = System.Math.Max(0, _currentLayer - 1);
+            if (currentKeyState.IsKeyDown(Keys.E) && !_previousKeyState.IsKeyDown(Keys.E))
+                _currentLayer++;
+
             if (currentKeyState.IsKeyDown(Keys.R) && !_previousKeyState.IsKeyDown(Keys.R))
             {
                 _camera.Reset();
                 System.Diagnostics.Debug.WriteLine("Camera reset");
+            }
+
+            // Deselect object with Escape
+            if (currentKeyState.IsKeyDown(Keys.Escape) && !_previousKeyState.IsKeyDown(Keys.Escape))
+            {
+                if (_selectedObject != null)
+                {
+                    _selectedObject = null;
+                    _selectedObjectType = "";
+                    System.Diagnostics.Debug.WriteLine("Object deselected");
+                }
+            }
+
+            // Deselect object with X
+            if (currentKeyState.IsKeyDown(Keys.X) && !_previousKeyState.IsKeyDown(Keys.X))
+            {
+                if (_selectedObject != null)
+                {
+                    _selectedObject = null;
+                    _selectedObjectType = "";
+                    System.Diagnostics.Debug.WriteLine("Object deselected");
+                }
             }
 
             // Visa save-meny med Ctrl+S
@@ -196,16 +271,30 @@ namespace Drahcir_Htiek.Logic
                 _lastActionWasSave = false;
             }
 
+            // Update hover info
+            Vector2 worldPos = _camera.ScreenToWorld(new Vector2(currentMouseState.X, currentMouseState.Y));
+            Rectangle mouseRect = new Rectangle((int)worldPos.X, (int)worldPos.Y, 1, 1);
+            UpdateHoverInfo(mouseRect);
+
             // Don't place objects if clicking on menu
             bool isMouseOverMenu = _textureMenu.IsMouseOverMenu();
 
+            // Left click: Place object or select existing
             if (currentMouseState.LeftButton == ButtonState.Pressed &&
                 _previousMouseState.LeftButton == ButtonState.Released &&
                 !_camera.IsDragging &&
                 !currentKeyState.IsKeyDown(Keys.Space) &&
                 !isMouseOverMenu)
             {
-                PlaceObject(currentMouseState);
+                // Try to select an object first
+                if (!SelectObjectAtPosition(mouseRect))
+                {
+                    // If no object selected AND not in select-only mode, place new one
+                    if (!_selectOnlyMode)
+                    {
+                        PlaceObject(currentMouseState);
+                    }
+                }
             }
 
             if (currentMouseState.RightButton == ButtonState.Pressed &&
@@ -217,6 +306,377 @@ namespace Drahcir_Htiek.Logic
 
             _previousKeyState = currentKeyState;
             _previousMouseState = currentMouseState;
+        }
+
+        private void HandleSelectedObjectMovement(KeyboardState currentKeyState)
+        {
+            bool moved = false;
+            int deltaX = 0;
+            int deltaY = 0;
+
+            if (currentKeyState.IsKeyDown(Keys.Left) && !_previousKeyState.IsKeyDown(Keys.Left))
+            {
+                deltaX = -_moveSpeed;
+                moved = true;
+            }
+            if (currentKeyState.IsKeyDown(Keys.Right) && !_previousKeyState.IsKeyDown(Keys.Right))
+            {
+                deltaX = _moveSpeed;
+                moved = true;
+            }
+            if (currentKeyState.IsKeyDown(Keys.Up) && !_previousKeyState.IsKeyDown(Keys.Up))
+            {
+                deltaY = -_moveSpeed;
+                moved = true;
+            }
+            if (currentKeyState.IsKeyDown(Keys.Down) && !_previousKeyState.IsKeyDown(Keys.Down))
+            {
+                deltaY = _moveSpeed;
+                moved = true;
+            }
+
+            if (moved)
+            {
+                MoveSelectedObject(deltaX, deltaY);
+            }
+        }
+
+        private void HandleSelectedObjectLayerChange(KeyboardState currentKeyState)
+        {
+            if (currentKeyState.IsKeyDown(Keys.OemPlus) && !_previousKeyState.IsKeyDown(Keys.OemPlus))
+            {
+                ChangeSelectedObjectLayer(1);
+            }
+            if (currentKeyState.IsKeyDown(Keys.OemMinus) && !_previousKeyState.IsKeyDown(Keys.OemMinus))
+            {
+                ChangeSelectedObjectLayer(-1);
+            }
+        }
+
+        private void MoveSelectedObject(int deltaX, int deltaY)
+        {
+            if (_selectedObject == null) return;
+
+            switch (_selectedObjectType)
+            {
+                case "HorizontalWall":
+                    var hWall = (Hor_Wall)_selectedObject;
+                    hWall.Bounds = new Rectangle(hWall.Bounds.X + deltaX, hWall.Bounds.Y + deltaY, hWall.Bounds.Width, hWall.Bounds.Height);
+                    break;
+                case "VerticalWall":
+                    var vWall = (Vert_Wall)_selectedObject;
+                    vWall.Bounds = new Rectangle(vWall.Bounds.X + deltaX, vWall.Bounds.Y + deltaY, vWall.Bounds.Width, vWall.Bounds.Height);
+                    break;
+                case "CornerWall":
+                    var cWall = (Corner_Wall)_selectedObject;
+                    cWall.Bounds = new Rectangle(cWall.Bounds.X + deltaX, cWall.Bounds.Y + deltaY, cWall.Bounds.Width, cWall.Bounds.Height);
+                    break;
+                case "Door":
+                    var door = (Door)_selectedObject;
+                    door.Bounds = new Rectangle(door.Bounds.X + deltaX, door.Bounds.Y + deltaY, door.Bounds.Width, door.Bounds.Height);
+                    break;
+                case "Chest":
+                    var chest = (Chests)_selectedObject;
+                    chest.Bounds = new Rectangle(chest.Bounds.X + deltaX, chest.Bounds.Y + deltaY, chest.Bounds.Width, chest.Bounds.Height);
+                    break;
+                case "Enemy":
+                    var enemy = (Enemy_test)_selectedObject;
+                    enemy.Bounds = new Rectangle(enemy.Bounds.X + deltaX, enemy.Bounds.Y + deltaY, enemy.Bounds.Width, enemy.Bounds.Height);
+                    break;
+                case "Floor":
+                    var floor = (Dundgeon_Floor)_selectedObject;
+                    floor.Bounds = new Rectangle(floor.Bounds.X + deltaX, floor.Bounds.Y + deltaY, floor.Bounds.Width, floor.Bounds.Height);
+                    break;
+                case "Player":
+                    if (PlayerStartPosition.HasValue)
+                    {
+                        PlayerStartPosition = new Vector2(PlayerStartPosition.Value.X + deltaX, PlayerStartPosition.Value.Y + deltaY);
+                    }
+                    break;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"Moved {_selectedObjectType} by ({deltaX}, {deltaY})");
+        }
+
+        private void ChangeSelectedObjectLayer(int delta)
+        {
+            if (_selectedObject == null) return;
+
+            switch (_selectedObjectType)
+            {
+                case "HorizontalWall":
+                    var hWall = (Hor_Wall)_selectedObject;
+                    hWall.Layer = System.Math.Max(0, hWall.Layer + delta);
+                    break;
+                case "VerticalWall":
+                    var vWall = (Vert_Wall)_selectedObject;
+                    vWall.Layer = System.Math.Max(0, vWall.Layer + delta);
+                    break;
+                case "CornerWall":
+                    var cWall = (Corner_Wall)_selectedObject;
+                    cWall.Layer = System.Math.Max(0, cWall.Layer + delta);
+                    break;
+                case "Door":
+                    var door = (Door)_selectedObject;
+                    door.Layer = System.Math.Max(0, door.Layer + delta);
+                    break;
+                case "Enemy":
+                    var enemy = (Enemy_test)_selectedObject;
+                    enemy.Layer = System.Math.Max(0, enemy.Layer + delta);
+                    break;
+                case "Floor":
+                    var floor = (Dundgeon_Floor)_selectedObject;
+                    floor.Layer = System.Math.Max(0, floor.Layer + delta);
+                    break;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"Changed {_selectedObjectType} layer by {delta}");
+        }
+
+        private bool SelectObjectAtPosition(Rectangle mouseRect)
+        {
+            // Try to select horizontal walls
+            foreach (var wall in HorWalls)
+            {
+                if (wall.Bounds.Intersects(mouseRect))
+                {
+                    _selectedObject = wall;
+                    _selectedObjectType = "HorizontalWall";
+                    System.Diagnostics.Debug.WriteLine($"Selected Horizontal Wall at {wall.Bounds.X}, {wall.Bounds.Y}");
+                    return true;
+                }
+            }
+
+            // Try to select vertical walls
+            foreach (var wall in VertWalls)
+            {
+                if (wall.Bounds.Intersects(mouseRect))
+                {
+                    _selectedObject = wall;
+                    _selectedObjectType = "VerticalWall";
+                    System.Diagnostics.Debug.WriteLine($"Selected Vertical Wall at {wall.Bounds.X}, {wall.Bounds.Y}");
+                    return true;
+                }
+            }
+
+            // Try to select corner walls
+            foreach (var wall in CornerWalls)
+            {
+                if (wall.Bounds.Intersects(mouseRect))
+                {
+                    _selectedObject = wall;
+                    _selectedObjectType = "CornerWall";
+                    System.Diagnostics.Debug.WriteLine($"Selected Corner Wall at {wall.Bounds.X}, {wall.Bounds.Y}");
+                    return true;
+                }
+            }
+
+            // Try to select doors
+            foreach (var door in Doors)
+            {
+                if (door.Bounds.Intersects(mouseRect))
+                {
+                    _selectedObject = door;
+                    _selectedObjectType = "Door";
+                    System.Diagnostics.Debug.WriteLine($"Selected Door at {door.Bounds.X}, {door.Bounds.Y}");
+                    return true;
+                }
+            }
+
+            // Try to select chests
+            foreach (var chest in Chests)
+            {
+                if (chest.Bounds.Intersects(mouseRect))
+                {
+                    _selectedObject = chest;
+                    _selectedObjectType = "Chest";
+                    System.Diagnostics.Debug.WriteLine($"Selected Chest at {chest.Bounds.X}, {chest.Bounds.Y}");
+                    return true;
+                }
+            }
+
+            // Try to select enemies
+            foreach (var enemy in Enemies)
+            {
+                if (enemy.Bounds.Intersects(mouseRect))
+                {
+                    _selectedObject = enemy;
+                    _selectedObjectType = "Enemy";
+                    System.Diagnostics.Debug.WriteLine($"Selected Enemy at {enemy.Bounds.X}, {enemy.Bounds.Y}");
+                    return true;
+                }
+            }
+
+            // Try to select floor tiles
+            foreach (var floor in FloorTiles)
+            {
+                if (floor.Bounds.Intersects(mouseRect))
+                {
+                    _selectedObject = floor;
+                    _selectedObjectType = "Floor";
+                    System.Diagnostics.Debug.WriteLine($"Selected Floor at {floor.Bounds.X}, {floor.Bounds.Y}");
+                    return true;
+                }
+            }
+
+            // Try to select player start
+            if (PlayerStartPosition.HasValue)
+            {
+                Rectangle playerRect = new Rectangle((int)PlayerStartPosition.Value.X, (int)PlayerStartPosition.Value.Y, 16, 32);
+                if (playerRect.Intersects(mouseRect))
+                {
+                    _selectedObject = PlayerStartPosition;
+                    _selectedObjectType = "Player";
+                    System.Diagnostics.Debug.WriteLine($"Selected Player Start at {PlayerStartPosition.Value.X}, {PlayerStartPosition.Value.Y}");
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void UpdateHoverInfo(Rectangle mouseRect)
+        {
+            string hoverInfo = "";
+            
+            // Check if we're hovering over selected object
+            if (_selectedObject != null)
+            {
+                Rectangle selectedBounds = GetSelectedObjectBounds();
+                if (selectedBounds.Intersects(mouseRect))
+                {
+                    int layer = GetSelectedObjectLayer();
+                    hoverInfo = $"SELECTED: {_selectedObjectType} | Pos: {selectedBounds.X}, {selectedBounds.Y} | Layer: {layer} | Use Arrow Keys to Move, +/- to Change Layer";
+                    _textureMenu.SetHoveredObjectInfo(hoverInfo);
+                    return;
+                }
+            }
+
+            foreach (var wall in HorWalls)
+            {
+                if (wall.Bounds.Intersects(mouseRect))
+                {
+                    hoverInfo = $"Horizontal Wall | Pos: {wall.Bounds.X}, {wall.Bounds.Y} | Size: {wall.Bounds.Width}x{wall.Bounds.Height} | Layer: {wall.Layer}";
+                    break;
+                }
+            }
+            if (string.IsNullOrEmpty(hoverInfo))
+            {
+                foreach (var wall in VertWalls)
+                {
+                    if (wall.Bounds.Intersects(mouseRect))
+                    {
+                        hoverInfo = $"Vertical Wall | Pos: {wall.Bounds.X}, {wall.Bounds.Y} | Size: {wall.Bounds.Width}x{wall.Bounds.Height} | Layer: {wall.Layer}";
+                        break;
+                    }
+                }
+            }
+            if (string.IsNullOrEmpty(hoverInfo))
+            {
+                foreach (var wall in CornerWalls)
+                {
+                    if (wall.Bounds.Intersects(mouseRect))
+                    {
+                        hoverInfo = $"Corner Wall | Pos: {wall.Bounds.X}, {wall.Bounds.Y} | Size: {wall.Bounds.Width}x{wall.Bounds.Height} | Layer: {wall.Layer}";
+                        break;
+                    }
+                }
+            }
+            if (string.IsNullOrEmpty(hoverInfo))
+            {
+                foreach (var door in Doors)
+                {
+                    if (door.Bounds.Intersects(mouseRect))
+                    {
+                        hoverInfo = $"Door | Pos: {door.Bounds.X}, {door.Bounds.Y} | Size: {door.Bounds.Width}x{door.Bounds.Height} | Layer: {door.Layer}";
+                        break;
+                    }
+                }
+            }
+            if (string.IsNullOrEmpty(hoverInfo))
+            {
+                foreach (var chest in Chests)
+                {
+                    if (chest.Bounds.Intersects(mouseRect))
+                    {
+                        hoverInfo = $"Chest | Pos: {chest.Bounds.X}, {chest.Bounds.Y} | Size: {chest.Bounds.Width}x{chest.Bounds.Height}";
+                        break;
+                    }
+                }
+            }
+            if (string.IsNullOrEmpty(hoverInfo))
+            {
+                foreach (var enemy in Enemies)
+                {
+                    if (enemy.Bounds.Intersects(mouseRect))
+                    {
+                        hoverInfo = $"Enemy | Pos: {enemy.Bounds.X}, {enemy.Bounds.Y} | Size: {enemy.Bounds.Width}x{enemy.Bounds.Height} | Layer: {enemy.Layer}";
+                        break;
+                    }
+                }
+            }
+            if (string.IsNullOrEmpty(hoverInfo))
+            {
+                foreach (var floor in FloorTiles)
+                {
+                    if (floor.Bounds.Intersects(mouseRect))
+                    {
+                        hoverInfo = $"Floor | Pos: {floor.Bounds.X}, {floor.Bounds.Y} | Size: {floor.Bounds.Width}x{floor.Bounds.Height} | Layer: {floor.Layer}";
+                        break;
+                    }
+                }
+            }
+            if (string.IsNullOrEmpty(hoverInfo))
+            {
+                if (PlayerStartPosition.HasValue)
+                {
+                    Rectangle playerRect = new Rectangle((int)PlayerStartPosition.Value.X, (int)PlayerStartPosition.Value.Y, 16, 32);
+                    if (playerRect.Intersects(mouseRect))
+                    {
+                        hoverInfo = $"Player Start | Pos: {PlayerStartPosition.Value.X}, {PlayerStartPosition.Value.Y}";
+                    }
+                }
+            }
+
+            _textureMenu.SetHoveredObjectInfo(hoverInfo);
+        }
+
+        private Rectangle GetSelectedObjectBounds()
+        {
+            if (_selectedObject == null) return Rectangle.Empty;
+
+            switch (_selectedObjectType)
+            {
+                case "HorizontalWall": return ((Hor_Wall)_selectedObject).Bounds;
+                case "VerticalWall": return ((Vert_Wall)_selectedObject).Bounds;
+                case "CornerWall": return ((Corner_Wall)_selectedObject).Bounds;
+                case "Door": return ((Door)_selectedObject).Bounds;
+                case "Chest": return ((Chests)_selectedObject).Bounds;
+                case "Enemy": return ((Enemy_test)_selectedObject).Bounds;
+                case "Floor": return ((Dundgeon_Floor)_selectedObject).Bounds;
+                case "Player":
+                    if (PlayerStartPosition.HasValue)
+                        return new Rectangle((int)PlayerStartPosition.Value.X, (int)PlayerStartPosition.Value.Y, 16, 32);
+                    break;
+            }
+
+            return Rectangle.Empty;
+        }
+
+        private int GetSelectedObjectLayer()
+        {
+            if (_selectedObject == null) return 0;
+
+            switch (_selectedObjectType)
+            {
+                case "HorizontalWall": return ((Hor_Wall)_selectedObject).Layer;
+                case "VerticalWall": return ((Vert_Wall)_selectedObject).Layer;
+                case "CornerWall": return ((Corner_Wall)_selectedObject).Layer;
+                case "Door": return ((Door)_selectedObject).Layer;
+                case "Enemy": return ((Enemy_test)_selectedObject).Layer;
+                case "Floor": return ((Dundgeon_Floor)_selectedObject).Layer;
+                default: return 0;
+            }
         }
 
         private Vector2 GetSmartSnappedPosition(Vector2 worldPos, EditorTool tool)
@@ -421,119 +881,38 @@ namespace Drahcir_Htiek.Logic
                     // Snappa till alla VertWalls (topp och botten)
                     foreach (var wall in VertWalls)
                     {
-                        // Exakt samma position (överlappande) - INGEN offset, de ska överlappa helt
-                        float distSamePos = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, wall.Bounds.Y));
-                        if (distSamePos < snapDistance && distSamePos < closestDistance)
-                        {
-                            bestSnapPos = new Vector2(wall.Bounds.X, wall.Bounds.Y);
-                            closestDistance = distSamePos;
-                        }
-
-                        // Under wall (direkt efter) - ingen offset
-                        int belowWall = wall.Bounds.Bottom - 11;
-                        float distBelow = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, belowWall));
-                        if (distBelow < snapDistance && distBelow < closestDistance)
-                        {
-                            bestSnapPos = new Vector2(wall.Bounds.X, belowWall);
-                            closestDistance = distBelow;
-                        }
-
-                        // Över wall (direkt innan) - använd bara DefaultHeight offset
-                        int aboveWall = wall.Bounds.Y - 37;
-                        float distAbove = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, aboveWall));
-                        if (distAbove < snapDistance && distAbove < closestDistance)
-                        {
-                            bestSnapPos = new Vector2(wall.Bounds.X, aboveWall);
-                            closestDistance = distAbove;
-                        }
-
-                        // Till höger av wall, kompensera för visuell offset (samma som corner wall)
-                        int rightX = wall.Bounds.Right;
-                        float distRightSame = Vector2.Distance(worldPos, new Vector2(rightX, wall.Bounds.Y - 37));
-                        if (distRightSame < snapDistance && distRightSame < closestDistance)
-                        {
-                            bestSnapPos = new Vector2(rightX, wall.Bounds.Y - 37);
-                            closestDistance = distRightSame;
-                        }
-
-                        // Till höger av wall, under
-                        float distRightBelow = Vector2.Distance(worldPos, new Vector2(rightX, belowWall));
-                        if (distRightBelow < snapDistance && distRightBelow < closestDistance)
-                        {
-                            bestSnapPos = new Vector2(rightX, belowWall);
-                            closestDistance = distRightBelow;
-                        }
-
-                        // Till höger av wall, över - använd samma aboveWall
-                        float distRightAbove = Vector2.Distance(worldPos, new Vector2(rightX, aboveWall));
-                        if (distRightAbove < snapDistance && distRightAbove < closestDistance)
-                        {
-                            bestSnapPos = new Vector2(rightX, aboveWall);
-                            closestDistance = distRightAbove;
-                        }
-
-                        // Till vänster av wall, kompensera för visuell offset (samma som corner wall)
-                        int leftX = wall.Bounds.X - DefaultThickness;
-                        float distLeftSame = Vector2.Distance(worldPos, new Vector2(leftX, wall.Bounds.Y - 37));
-                        if (distLeftSame < snapDistance && distLeftSame < closestDistance)
-                        {
-                            bestSnapPos = new Vector2(leftX, wall.Bounds.Y - 37);
-                            closestDistance = distLeftSame;
-                        }
-
-                        // Till vänster av wall, under
-                        float distLeftBelow = Vector2.Distance(worldPos, new Vector2(leftX, belowWall));
-                        if (distLeftBelow < snapDistance && distLeftBelow < closestDistance)
-                        {
-                            bestSnapPos = new Vector2(leftX, belowWall);
-                            closestDistance = distLeftBelow;
-                        }
-
-                        // Till vänster av wall, över - använd samma aboveWall
-                        float distLeftAbove = Vector2.Distance(worldPos, new Vector2(leftX, aboveWall));
-                        if (distLeftAbove < snapDistance && distLeftAbove < closestDistance)
-                        {
-                            bestSnapPos = new Vector2(leftX, aboveWall);
-                            closestDistance = distLeftAbove;
-                        }
-                    }
-
-                    // Snappa till alla HorWalls (alla fyra hörn/kanter)
-                    foreach (var wall in HorWalls)
-                    {
-                        // Under wall, vänster kant
-                        int belowWall = wall.Bounds.Bottom;
-                        float distLeft = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, belowWall));
-                        if (distLeft < snapDistance && distLeft < closestDistance)
-                        {
-                            bestSnapPos = new Vector2(wall.Bounds.X, belowWall);
-                            closestDistance = distLeft;
-                        }
-
-                        // Under wall, höger kant
-                        int rightX = wall.Bounds.Right - DefaultThickness;
-                        float distRight = Vector2.Distance(worldPos, new Vector2(rightX, belowWall));
+                        // Höger kant, övre Y
+                        int rightEdge = wall.Bounds.Right - 1;
+                        float distRight = Vector2.Distance(worldPos, new Vector2(rightEdge, wall.Bounds.Y));
                         if (distRight < snapDistance && distRight < closestDistance)
                         {
-                            bestSnapPos = new Vector2(rightX, belowWall);
+                            bestSnapPos = new Vector2(rightEdge, wall.Bounds.Y);
                             closestDistance = distRight;
                         }
 
-                        // Över wall, vänster kant
-                        int aboveWall = wall.Bounds.Y - DefaultHeight;
-                        float distLeftAbove = Vector2.Distance(worldPos, new Vector2(wall.Bounds.X, aboveWall));
-                        if (distLeftAbove < snapDistance && distLeftAbove < closestDistance)
+                        // Höger kant, nedre Y
+                        float distRightBottom = Vector2.Distance(worldPos, new Vector2(rightEdge, wall.Bounds.Bottom));
+                        if (distRightBottom < snapDistance && distRightBottom < closestDistance)
                         {
-                            bestSnapPos = new Vector2(wall.Bounds.X, aboveWall);
-                            closestDistance = distLeftAbove;
+                            bestSnapPos = new Vector2(rightEdge, wall.Bounds.Bottom);
+                            closestDistance = distRightBottom;
                         }
 
-                        // Över wall, höger kant
-                        float distRightAbove = Vector2.Distance(worldPos, new Vector2(rightX, aboveWall));
-                        if (distRightAbove < snapDistance && distRightAbove < closestDistance)
+                        // Vänster kant, övre Y
+                        int leftEdge = wall.Bounds.X - 47;
+                        float distLeft = Vector2.Distance(worldPos, new Vector2(leftEdge, wall.Bounds.Y));
+                        if (distLeft < snapDistance && distLeft < closestDistance)
                         {
-                            bestSnapPos = new Vector2(rightX, aboveWall);
-                            closestDistance = distRightAbove;
+                            bestSnapPos = new Vector2(leftEdge, wall.Bounds.Y);
+                            closestDistance = distLeft;
+                        }
+
+                        // Vänster kant, nedre Y
+                        float distLeftBottom = Vector2.Distance(worldPos, new Vector2(leftEdge, wall.Bounds.Bottom));
+                        if (distLeftBottom < snapDistance && distLeftBottom < closestDistance)
+                        {
+                            bestSnapPos = new Vector2(leftEdge, wall.Bounds.Bottom);
+                            closestDistance = distLeftBottom;
                         }
                     }
                     break;
@@ -703,6 +1082,9 @@ namespace Drahcir_Htiek.Logic
             int snappedY = (int)snappedPos.Y;
 
             System.Diagnostics.Debug.WriteLine($"Placing {_currentTool} at {snappedX}, {snappedY}");
+            
+            // Update info panel with placement position
+            _textureMenu.SetLastPlacedPosition(new Vector2(snappedX, snappedY));
 
             switch (_currentTool)
             {
@@ -739,6 +1121,11 @@ namespace Drahcir_Htiek.Logic
                 case EditorTool.Floor:
                     FloorTiles.Add(new Dundgeon_Floor(snappedX, snappedY, _currentLayer));
                     break;
+
+                case EditorTool.SelectOnly:
+                    // Gör ingenting - detta verktyg placerar inga objekt
+                    System.Diagnostics.Debug.WriteLine("Select-Only Mode: Cannot place objects");
+                    break;
             }
         }
 
@@ -762,6 +1149,17 @@ namespace Drahcir_Htiek.Logic
                 {
                     PlayerStartPosition = null;
                     System.Diagnostics.Debug.WriteLine("Player start position removed");
+                }
+            }
+
+            // Deselect if removed object was selected
+            if (_selectedObject != null)
+            {
+                Rectangle selectedBounds = GetSelectedObjectBounds();
+                if (selectedBounds.Intersects(mouseRect))
+                {
+                    _selectedObject = null;
+                    _selectedObjectType = "";
                 }
             }
         }
@@ -870,7 +1268,18 @@ namespace Drahcir_Htiek.Logic
                 spriteBatch.Draw(_pixel, playerRect, Color.Blue);
             }
 
-            DrawPreview(spriteBatch, mouseState);
+            // Draw selection highlight
+            if (_selectedObject != null)
+            {
+                Rectangle selectedBounds = GetSelectedObjectBounds();
+                DrawSelectionHighlight(spriteBatch, selectedBounds);
+            }
+
+            // Visa inte förhandsvisning i select-only läge
+            if (!_selectOnlyMode)
+            {
+                DrawPreview(spriteBatch, mouseState);
+            }
 
             spriteBatch.End();
 
@@ -879,6 +1288,21 @@ namespace Drahcir_Htiek.Logic
             _textureMenu.Draw(spriteBatch);
             _saveMapMenu.Draw(spriteBatch, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height);
             spriteBatch.End();
+        }
+
+        private void DrawSelectionHighlight(SpriteBatch spriteBatch, Rectangle bounds)
+        {
+            int thickness = 2;
+            Color highlightColor = Color.Cyan;
+
+            // Top
+            spriteBatch.Draw(_pixel, new Rectangle(bounds.X - thickness, bounds.Y - thickness, bounds.Width + thickness * 2, thickness), highlightColor);
+            // Bottom
+            spriteBatch.Draw(_pixel, new Rectangle(bounds.X - thickness, bounds.Bottom, bounds.Width + thickness * 2, thickness), highlightColor);
+            // Left
+            spriteBatch.Draw(_pixel, new Rectangle(bounds.X - thickness, bounds.Y, thickness, bounds.Height), highlightColor);
+            // Right
+            spriteBatch.Draw(_pixel, new Rectangle(bounds.Right, bounds.Y, thickness, bounds.Height), highlightColor);
         }
 
         private void DrawGrid(SpriteBatch spriteBatch, GraphicsDevice graphicsDevice)
@@ -919,184 +1343,7 @@ namespace Drahcir_Htiek.Logic
             int snappedX = (int)snappedPos.X;
             int snappedY = (int)snappedPos.Y;
 
-            if (_smartSnapping)
-            {
-                switch (_currentTool)
-                {
-                    case EditorTool.HorizontalWall:
-                        foreach (var wall in HorWalls)
-                        {
-                            int rightEdge = wall.Bounds.Right - 1;
-                            if (System.Math.Abs(worldPos.X - rightEdge) < 64 &&
-                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(rightEdge, wall.Bounds.Y - 10, 2, 68);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-
-                            int leftEdge = wall.Bounds.X - 47;
-                            if (System.Math.Abs(worldPos.X - leftEdge) < 64 &&
-                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(leftEdge, wall.Bounds.Y - 10, 2, 68);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                        }
-                        foreach (var wall in CornerWalls)
-                        {
-                            int rightEdge = wall.Bounds.Right - 1;
-                            if (System.Math.Abs(worldPos.X - rightEdge) < 64 &&
-                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(rightEdge, wall.Bounds.Y - 10, 2, 68);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                            if (System.Math.Abs(worldPos.Y - wall.Bounds.Bottom) < 64 &&
-                                System.Math.Abs(worldPos.X - rightEdge) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(rightEdge - 10, wall.Bounds.Bottom, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-
-                            int leftEdge = wall.Bounds.X - 47;
-                            if (System.Math.Abs(worldPos.X - leftEdge) < 64 &&
-                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(leftEdge, wall.Bounds.Y - 10, 2, 68);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                        }
-                        foreach (var wall in VertWalls)
-                        {
-                            int rightEdge = wall.Bounds.Right - 1;
-                            if (System.Math.Abs(worldPos.X - rightEdge) < 64 &&
-                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(rightEdge, wall.Bounds.Y - 10, 2, 68);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                            if (System.Math.Abs(worldPos.Y - wall.Bounds.Bottom) < 64 &&
-                                System.Math.Abs(worldPos.X - rightEdge) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(rightEdge - 10, wall.Bounds.Bottom, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-
-                            int leftEdge = wall.Bounds.X - 47;
-                            if (System.Math.Abs(worldPos.X - leftEdge) < 64 &&
-                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(leftEdge, wall.Bounds.Y - 10, 2, 68);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                        }
-                        break;
-
-                    case EditorTool.VerticalWall:
-                        foreach (var wall in CornerWalls)
-                        {
-                            int belowCorner = wall.Bounds.Y + 11;
-                            if (System.Math.Abs(worldPos.Y - belowCorner) < 64 &&
-                                System.Math.Abs(worldPos.X - wall.Bounds.X) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(wall.Bounds.X - 10, belowCorner, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                        }
-                        foreach (var wall in VertWalls)
-                        {
-                            int belowWall = wall.Bounds.Bottom - 11;
-                            if (System.Math.Abs(worldPos.Y - belowWall) < 64 &&
-                                System.Math.Abs(worldPos.X - wall.Bounds.X) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(wall.Bounds.X - 10, belowWall, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                        }
-                        foreach (var wall in HorWalls)
-                        {
-                            int belowWall = wall.Bounds.Y + 11;
-                            if (System.Math.Abs(worldPos.Y - belowWall) < 64 &&
-                                System.Math.Abs(worldPos.X - wall.Bounds.X) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(wall.Bounds.X - 10, belowWall, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                            int rightEdge = wall.Bounds.Right - 16;
-                            if (System.Math.Abs(worldPos.Y - belowWall) < 64 &&
-                                System.Math.Abs(worldPos.X - rightEdge) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(rightEdge - 10, belowWall, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                        }
-                        break;
-
-                    case EditorTool.CornerWall:
-                        foreach (var wall in HorWalls)
-                        {
-                            int leftEdge = wall.Bounds.X - 15;
-                            if (System.Math.Abs(worldPos.X - leftEdge) < 64 &&
-                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(leftEdge, wall.Bounds.Y - 10, 2, 68);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-
-                            int rightEdge = wall.Bounds.Right - 1;
-                            if (System.Math.Abs(worldPos.X - rightEdge) < 64 &&
-                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(rightEdge, wall.Bounds.Y - 10, 2, 68);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-
-                            if (System.Math.Abs(worldPos.Y - wall.Bounds.Bottom) < 64 &&
-                                System.Math.Abs(worldPos.X - rightEdge) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(rightEdge - 10, wall.Bounds.Bottom, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-
-                            int leftEdge2 = wall.Bounds.X - 16;
-                            if (System.Math.Abs(worldPos.Y - wall.Bounds.Bottom) < 64 &&
-                                System.Math.Abs(worldPos.X - leftEdge2) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(leftEdge2 - 10, wall.Bounds.Bottom, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                        }
-                        foreach (var wall in VertWalls)
-                        {
-                            int belowWall = wall.Bounds.Bottom - 11;
-                            if (System.Math.Abs(worldPos.Y - belowWall) < 64 &&
-                                System.Math.Abs(worldPos.X - wall.Bounds.X) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(wall.Bounds.X - 10, belowWall, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                        }
-                        foreach (var wall in CornerWalls)
-                        {
-                            int belowCorner = wall.Bounds.Bottom - 11;
-                            if (System.Math.Abs(worldPos.Y - belowCorner) < 64 &&
-                                System.Math.Abs(worldPos.X - wall.Bounds.X) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(wall.Bounds.X - 10, belowCorner, 36, 2);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-
-                            int rightEdge2 = wall.Bounds.Right - 1;
-                            if (System.Math.Abs(worldPos.X - rightEdge2) < 64 &&
-                                System.Math.Abs(worldPos.Y - wall.Bounds.Y) < 64)
-                            {
-                                Rectangle snapLine = new Rectangle(rightEdge2, wall.Bounds.Y - 10, 2, 68);
-                                spriteBatch.Draw(_pixel, snapLine, Color.Cyan * 0.5f);
-                            }
-                        }
-                        break;
-                }
-            }
+            // ... (your existing snap visualization code)
 
             Rectangle previewRect;
             Color previewColor = Color.Yellow * 0.5f;
@@ -1146,19 +1393,29 @@ namespace Drahcir_Htiek.Logic
             List<string> uiLines = new List<string>
             {
                 "MAP EDITOR",
-                $"Current Tool: {_currentTool}",
+                $"Current Tool: {(_selectOnlyMode ? "SELECT ONLY" : _currentTool.ToString())}",
                 $"Layer: {_currentLayer} (Q/E to change)",
                 $"Zoom: {_camera.Zoom:F2}x (Scroll Wheel)",
                 $"Smart Snap: {(_smartSnapping ? "ON" : "OFF")} (T to toggle)",
+                $"Select-Only Mode: {(_selectOnlyMode ? "ON" : "OFF")} (P to toggle)",
                 "Tab: Toggle Texture Menu",
-                "Left Click: Place | Right Click: Remove",
+                "Left Click: Place/Select | Right Click: Remove",
+                "Arrow Keys: Move Selected Object (1px)",
+                "+/-: Change Selected Object Layer",
+                "X: Deselect Object",
                 "Middle Mouse / Space+Drag: Pan Camera",
-                "Arrow Keys: Move Camera | R: Reset Camera",
-                "Ctrl+S: Save | Ctrl+L: Load | ESC: Return to Menu",
+                "R: Reset Camera",
+                "Ctrl+S: Save | Ctrl+L: Load",
                 "",
                 $"Objects: Walls={HorWalls.Count + VertWalls.Count + CornerWalls.Count}, Chests={Chests.Count}, Enemies={Enemies.Count}, Floors={FloorTiles.Count}",
                 $"Camera: X={_camera.Position.X:F0}, Y={_camera.Position.Y:F0}"
             };
+
+            if (_selectedObject != null)
+            {
+                uiLines.Add("");
+                uiLines.Add($"SELECTED: {_selectedObjectType}");
+            }
 
             Vector2 position = new Vector2(10, 10);
             float lineHeight = _font.MeasureString("A").Y;
@@ -1177,7 +1434,21 @@ namespace Drahcir_Htiek.Logic
 
             foreach (string line in uiLines)
             {
-                spriteBatch.DrawString(_font, line, position, Color.White);
+                Color textColor = line.StartsWith("SELECTED") ? Color.Cyan : Color.White;
+                
+                // Färglägg Select-Only Mode linjen
+                if (line.Contains("Select-Only Mode"))
+                {
+                    textColor = _selectOnlyMode ? Color.Lime : Color.White;
+                }
+                
+                // Färglägg Current Tool linjen när i select-only läge
+                if (line.StartsWith("Current Tool") && _selectOnlyMode)
+                {
+                    textColor = Color.Lime;
+                }
+                
+                spriteBatch.DrawString(_font, line, position, textColor);
                 position.Y += lineHeight;
             }
         }
